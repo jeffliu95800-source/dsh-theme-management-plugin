@@ -69,12 +69,22 @@ dsh plugin --profile web add link:<checkout>/packages/pet/sakuragi
 
 默认数据在 `~/.dsh/slamdunk/`（pets/ + themes/ 分离）。想让「一个文件夹 = 一个主题+宠物组合」，配置素材库：
 
-编辑 `~/.dsh/profiles/web/cordis.patch.yml`：
+编辑 `~/.dsh/profiles/web/cordis.patch.yml`。完整内容备份如下（把 `materialRoot` 换成你自己的绝对路径）：
+
 ```yaml
+# Your patch layer for this dsh profile, applied after every bundle layer:
+# a top-level YAML array of loader patch entries (id-targeted config
+# overrides, disables, and insert lists; `!!js` expressions allowed).
+
+# Point the pet/theme plugin at the material library ("dsh theme" folder):
+# every subfolder (灌篮高手/凡人修仙传/蜡笔小新/…) is one theme+character combo
+# with model/ (poses), img/ (wallpapers), music/ (background music).
 - id: sakuragi-pet
   config:
-    materialRoot: '/绝对路径/你的素材库文件夹'
+    materialRoot: '/Users/jeff/Documents/dsh/dsh theme'
 ```
+
+> ⚠️ **这份配置曾被意外清空**（导致插件回退到 legacy 布局、素材库人物「消失」）。建议把上面完整内容单独存一份备份，避免丢失后误以为数据丢了。
 
 素材库结构：
 ```
