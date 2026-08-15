@@ -46,6 +46,8 @@ export interface PetConfigView {
   fallback: string[]
   /** Pose image URL paths. */
   poses: string[]
+  /** Pose filenames soft-deleted (hidden; restorable). */
+  deletedPoses: string[]
   /** Background-music state and file URL paths. */
   music: { enabled: boolean; files: string[] }
 }
@@ -56,6 +58,8 @@ export interface ThemeConfigView {
   name: string
   /** Background image URL paths. */
   backgrounds: string[]
+  /** Background filenames soft-deleted (hidden; restorable). */
+  deletedBackgrounds: string[]
 }
 
 /** One transient reaction bubble on the pet. */

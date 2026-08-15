@@ -29,6 +29,7 @@ export interface PetEditModalProps {
   uploadAsset: (kind: 'pose' | 'music', id: string, name: string, data: Blob) => Promise<void>
   deleteMusic: (id: string, name: string) => Promise<void>
   deletePose: (id: string, name: string) => Promise<void>
+  restorePose: (id: string, name: string) => Promise<void>
   onClose: () => void
 }
 
@@ -48,6 +49,7 @@ export function PetEditModal({
   uploadAsset,
   deleteMusic,
   deletePose,
+  restorePose,
   onClose,
 }: PetEditModalProps) {
   const [config, setConfig] = useState<PetConfigView | null>(null)
@@ -123,6 +125,10 @@ export function PetEditModal({
     deletePose(id, fileName).then(reload, () => {})
   }
 
+  const onRestorePose = (fileName: string): void => {
+    restorePose(id, fileName).then(reload, () => {})
+  }
+
   const onDeletePet = (): void => {
     if (!window.confirm(`确定删除卡通人物「${name}」吗？删除后不可恢复。`)) return
     deletePet(id).then(onClose, () => {})
@@ -166,6 +172,17 @@ export function PetEditModal({
               </div>
               <button type="button" className={css.uploadBtn} onClick={() => { poseRef.current?.click() }}>上传形象</button>
               <input ref={poseRef} type="file" accept="image/*,.svg" style={{ display: 'none' }} onChange={onPoseChange} />
+              {config.deletedPoses.length > 0 && (
+                <div className={css.fileList}>
+                  <span className={css.emptyHint}>已删除（可恢复）：</span>
+                  {config.deletedPoses.map(fileName => (
+                    <div key={fileName} className={css.fileRow}>
+                      <span className={css.fileName}>{fileName}</span>
+                      <button type="button" className={css.delBtn} onClick={() => { onRestorePose(fileName) }}>恢复</button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </section>
 
             {/* 互动按钮名称（自定义；聊/隐藏固定） */}

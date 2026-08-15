@@ -159,6 +159,22 @@ export function softDeleteBackground(id: string, name: string): boolean {
   return true
 }
 
+/** Names of background files soft-deleted (for the restore UI). */
+export function listDeletedBackgrounds(id: string): string[] {
+  return [...softDeletedBackgrounds(id)].sort()
+}
+
+/** Restore a soft-deleted background: remove its name from the deleted list. */
+export function restoreBackground(id: string, name: string): boolean {
+  const dir = themeDir(id)
+  const raw = JSON.parse(readFileSync(join(dir, 'theme.json'), 'utf8')) as Record<string, unknown>
+  const current = (raw.deletedBackgrounds as string[] | undefined) ?? []
+  const next = current.filter(n => n !== name)
+  if (next.length === current.length) return false
+  writeFileSync(join(dir, 'theme.json'), JSON.stringify({ ...raw, deletedBackgrounds: next }, null, 2))
+  return true
+}
+
 /** Create a new theme from a name; returns its id. */
 export function createTheme(name: string): string {
   if (isLibraryMode()) {

@@ -15,6 +15,7 @@ export interface ThemeEditModalProps {
   deleteTheme: (id: string) => Promise<void>
   uploadBackground: (id: string, name: string, data: Blob) => Promise<void>
   deleteBackground: (id: string, name: string) => Promise<void>
+  restoreBackground: (id: string, name: string) => Promise<void>
   onClose: () => void
 }
 
@@ -23,7 +24,7 @@ export interface ThemeEditModalProps {
  * @param props - theme id and host callbacks.
  * @returns the modal element tree.
  */
-export function ThemeEditModal({ id, getConfig, renameTheme, deleteTheme, uploadBackground, deleteBackground, onClose }: ThemeEditModalProps) {
+export function ThemeEditModal({ id, getConfig, renameTheme, deleteTheme, uploadBackground, deleteBackground, restoreBackground, onClose }: ThemeEditModalProps) {
   const [config, setConfig] = useState<ThemeConfigView | null>(null)
   const [name, setName] = useState('')
   const [saving, setSaving] = useState(false)
@@ -65,6 +66,10 @@ export function ThemeEditModal({ id, getConfig, renameTheme, deleteTheme, upload
     deleteBackground(id, fileName).then(reload, () => {})
   }
 
+  const onRestoreBackground = (fileName: string): void => {
+    restoreBackground(id, fileName).then(reload, () => {})
+  }
+
   return (
     <div className={css.overlay} role="dialog" aria-label="编辑桌面主题">
       <div className={css.panel}>
@@ -103,6 +108,17 @@ export function ThemeEditModal({ id, getConfig, renameTheme, deleteTheme, upload
               </div>
               <button type="button" className={css.uploadBtn} onClick={() => { fileRef.current?.click() }}>添加照片</button>
               <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={onFileChange} />
+              {config.deletedBackgrounds.length > 0 && (
+                <div className={css.fileList}>
+                  <span className={css.emptyHint}>已删除（可恢复）：</span>
+                  {config.deletedBackgrounds.map(fileName => (
+                    <div key={fileName} className={css.fileRow}>
+                      <span className={css.fileName}>{fileName}</span>
+                      <button type="button" className={css.delBtn} onClick={() => { onRestoreBackground(fileName) }}>恢复</button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </section>
           </div>
         )}

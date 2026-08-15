@@ -27,11 +27,13 @@ export interface PetSettingsInjected {
   uploadPetAsset: (kind: 'pose' | 'music', id: string, name: string, data: Blob) => Promise<void>
   deleteMusic: (id: string, name: string) => Promise<void>
   deletePetPose: (id: string, name: string) => Promise<void>
+  restorePetPose: (id: string, name: string) => Promise<void>
   getThemeConfig: (id: string) => Promise<ThemeConfigView>
   renameTheme: (id: string, name: string) => Promise<void>
   deleteTheme: (id: string) => Promise<void>
   uploadThemeBackground: (id: string, name: string, data: Blob) => Promise<void>
   deleteThemeBackground: (id: string, name: string) => Promise<void>
+  restoreThemeBackground: (id: string, name: string) => Promise<void>
 }
 
 /** Full component props: runtime + store + locale seats and the injected face. */
@@ -60,11 +62,13 @@ export function PetSettingsRow({
   uploadPetAsset,
   deleteMusic,
   deletePetPose,
+  restorePetPose,
   getThemeConfig,
   renameTheme,
   deleteTheme,
   uploadThemeBackground,
   deleteThemeBackground,
+  restoreThemeBackground,
   t,
 }: PetSettingsProps) {
   const visible = useStore(s => s.snapshot?.display.visible ?? true)
@@ -148,6 +152,7 @@ export function PetSettingsRow({
           uploadAsset={uploadPetAsset}
           deleteMusic={deleteMusic}
           deletePose={deletePetPose}
+          restorePose={restorePetPose}
           onClose={() => { setEditingPet(null) }}
         />
       )}
@@ -159,6 +164,7 @@ export function PetSettingsRow({
           deleteTheme={deleteTheme}
           uploadBackground={uploadThemeBackground}
           deleteBackground={deleteThemeBackground}
+          restoreBackground={restoreThemeBackground}
           onClose={() => { setEditingTheme(null) }}
         />
       )}

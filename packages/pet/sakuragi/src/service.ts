@@ -17,6 +17,7 @@ import {
   createPet as createPetDir,
   deletePet as deletePetDir,
   ensureLibraryMeta as ensurePetLibraryMeta,
+  listDeletedPoses,
   listMusicFiles,
   listPetIds,
   listPets,
@@ -26,6 +27,7 @@ import {
   petsRoot,
   poseDirName,
   renamePet as renamePetDir,
+  restorePose,
   seedBuiltinPet,
   setActivePetId,
   setMaterialRoot,
@@ -42,10 +44,12 @@ import {
   createTheme as createThemeDir,
   deleteTheme as deleteThemeDir,
   ensureLibraryMeta as ensureThemeLibraryMeta,
+  listDeletedBackgrounds,
   listThemeBackgrounds,
   listThemeIds,
   listThemes,
   renameTheme as renameThemeDir,
+  restoreBackground,
   seedBuiltinTheme,
   setActiveThemeId,
   softDeleteBackground,
@@ -140,6 +144,8 @@ export interface PetConfigView {
   fallback: string[]
   /** Pose image URL paths. */
   poses: string[]
+  /** Pose filenames soft-deleted (hidden; restorable). */
+  deletedPoses: string[]
   /** Background-music state and file URL paths. */
   music: { enabled: boolean; files: string[] }
 }
@@ -156,6 +162,8 @@ export interface ThemeConfigView {
   name: string
   /** Background image URL paths. */
   backgrounds: string[]
+  /** Background filenames soft-deleted (hidden; restorable). */
+  deletedBackgrounds: string[]
 }
 
 /** Result of an interaction. */
@@ -354,6 +362,7 @@ export class PetService extends Service {
       actions: pack.actions,
       fallback: pack.fallback,
       poses: listPoseFiles(id).map(file => `/sakuragi/pets/${id}/${poseDirName()}/${file}`),
+      deletedPoses: listDeletedPoses(id),
       music: {
         enabled: pack.music.enabled,
         files: listMusicFiles(id).map(file => `/sakuragi/pets/${id}/music/${file}`),
@@ -411,6 +420,13 @@ export class PetService extends Service {
     return { ok }
   }
 
+  /** Restore one soft-deleted pose image of a pet. */
+  async restorePetPose(id: string, name: string): Promise<{ ok: boolean }> {
+    const ok = restorePose(id, name)
+    if (this.activeId === id) this.reloadCharacter()
+    return { ok }
+  }
+
   /** Delete a pet; the active selection falls back to the built-in. */
   async deletePet(id: string): Promise<{ ok: true } | { ok: false; error: string }> {
     if (!listPetIds().includes(id)) return { ok: false, error: 'unknown-pet' }
@@ -433,6 +449,7 @@ export class PetService extends Service {
       id,
       name: themeName(id),
       backgrounds: listThemeBackgrounds(id).map(file => `/sakuragi/themes/${id}/${backgroundDirName()}/${file}`),
+      deletedBackgrounds: listDeletedBackgrounds(id),
     }
   }
 
@@ -455,6 +472,11 @@ export class PetService extends Service {
   /** Soft-delete one background image of a theme (file stays, hidden from listings). */
   async deleteThemeBackground(id: string, name: string): Promise<{ ok: boolean }> {
     return { ok: softDeleteBackground(id, name) }
+  }
+
+  /** Restore one soft-deleted background image of a theme. */
+  async restoreThemeBackground(id: string, name: string): Promise<{ ok: boolean }> {
+    return { ok: restoreBackground(id, name) }
   }
 
   display(): PetDisplayConfig {

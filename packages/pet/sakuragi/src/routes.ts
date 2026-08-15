@@ -261,6 +261,12 @@ export function makePetRoutes(deps: { service: PetService }): WebRoute[] {
       if (typeof id !== 'string' || typeof name !== 'string') return Promise.reject(new Error('invalid-args'))
       return service.deletePetPose(id, name)
     }),
+    postRoute(`${PET_API_PREFIX}/pets/pose-restore`, (body) => {
+      const id = body.id
+      const name = body.name
+      if (typeof id !== 'string' || typeof name !== 'string') return Promise.reject(new Error('invalid-args'))
+      return service.restorePetPose(id, name)
+    }),
     postRoute(`${PET_API_PREFIX}/themes/config`, (body) => {
       const id = body.id
       if (typeof id !== 'string') return Promise.reject(new Error('invalid-id'))
@@ -282,6 +288,12 @@ export function makePetRoutes(deps: { service: PetService }): WebRoute[] {
       const name = body.name
       if (typeof id !== 'string' || typeof name !== 'string') return Promise.reject(new Error('invalid-args'))
       return service.deleteThemeBackground(id, name)
+    }),
+    postRoute(`${PET_API_PREFIX}/themes/background-restore`, (body) => {
+      const id = body.id
+      const name = body.name
+      if (typeof id !== 'string' || typeof name !== 'string') return Promise.reject(new Error('invalid-args'))
+      return service.restoreThemeBackground(id, name)
     }),
   ]
 

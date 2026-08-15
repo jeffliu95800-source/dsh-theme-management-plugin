@@ -181,6 +181,10 @@ export function apply(ctx: ClientContext): void {
       petUpload(`/api/sakuragi/upload?kind=background&id=${encodeURIComponent(id)}&name=${encodeURIComponent(name)}`, data),
     deleteThemeBackground: (id: string, name: string) =>
       petFetch('/api/sakuragi/themes/background-delete', { id, name }).then(() => { refreshLists() }),
+    restorePetPose: (id: string, name: string) =>
+      petFetch('/api/sakuragi/pets/pose-restore', { id, name }).then(() => { pollNow(); refreshCharacterChat() }),
+    restoreThemeBackground: (id: string, name: string) =>
+      petFetch('/api/sakuragi/themes/background-restore', { id, name }).then(() => { refreshLists() }),
     }
   }
 

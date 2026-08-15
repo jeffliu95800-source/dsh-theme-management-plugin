@@ -183,6 +183,21 @@ export function softDeletePose(id: string, name: string): boolean {
   return true
 }
 
+/** Names of pose files soft-deleted (for the restore UI). */
+export function listDeletedPoses(id: string): string[] {
+  return [...softDeletedPoses(id)].sort()
+}
+
+/** Restore a soft-deleted pose: remove its name from the deleted list. */
+export function restorePose(id: string, name: string): boolean {
+  const raw = readPetJson(id)
+  const current = (raw.deletedPoses as string[] | undefined) ?? []
+  const next = current.filter(n => n !== name)
+  if (next.length === current.length) return false
+  writePetJson(id, { ...raw, deletedPoses: next })
+  return true
+}
+
 /** Background-music filenames for one pet (sorted; empty when absent). */
 export function listMusicFiles(id: string): string[] {
   try {
