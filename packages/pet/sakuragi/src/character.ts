@@ -47,12 +47,20 @@ export interface CharacterPack {
   poses: string[]
 }
 
+/** Image extensions accepted as character poses. */
+const POSE_EXTENSIONS = ['.svg', '.png', '.jpg', '.jpeg', '.webp', '.gif']
+
 /** Load the character pack from a directory holding character.json + poses/. */
-export function loadCharacterPack(dir: string): CharacterPack {
+export function loadCharacterPack(dir: string, poseDir: string = 'poses'): CharacterPack {
   const parsed = JSON.parse(readFileSync(join(dir, 'character.json'), 'utf8')) as
     Omit<CharacterPack, 'poses' | 'music'> & { music?: Partial<CharacterMusic> | undefined }
-  const poses = readdirSync(join(dir, 'poses'))
-    .filter(file => file.endsWith('.svg'))
-    .sort()
+  let poses: string[] = []
+  try {
+    poses = readdirSync(join(dir, poseDir))
+      .filter(file => POSE_EXTENSIONS.some(ext => file.toLowerCase().endsWith(ext)))
+      .sort()
+  } catch {
+    // pose dir absent → empty pose list
+  }
   return { ...parsed, music: { enabled: parsed.music?.enabled ?? false }, poses }
 }

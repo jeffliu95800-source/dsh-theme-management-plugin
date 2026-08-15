@@ -16,14 +16,19 @@ import {
   activePetId,
   createPet as createPetDir,
   deletePet as deletePetDir,
+  ensureLibraryMeta as ensurePetLibraryMeta,
   listMusicFiles,
   listPetIds,
   listPets,
+  listPoseFiles,
   loadPet,
+  petPosesDir as petPosesDirOf,
   petsRoot,
+  poseDirName,
   renamePet as renamePetDir,
   seedBuiltinPet,
   setActivePetId,
+  setMaterialRoot,
   setPetMusicEnabled as setPetMusicEnabledDir,
   updatePetQuotes as updatePetQuotesDir,
   BUILTIN_PET_ID,
@@ -31,8 +36,10 @@ import {
 } from './pets.ts'
 import {
   activeThemeId,
+  backgroundDirName,
   createTheme as createThemeDir,
   deleteTheme as deleteThemeDir,
+  ensureLibraryMeta as ensureThemeLibraryMeta,
   listThemeBackgrounds,
   listThemeIds,
   listThemes,
@@ -75,6 +82,8 @@ export interface PetConfig {
   enabled?: boolean
   /** Package root whose assets/ holds the character pack. */
   packageRoot: string
+  /** Material-library root (each subfolder = one theme+character combo); unset keeps the legacy layout. */
+  materialRoot?: string
 }
 
 /** The pet's settings-namespace section edited by the web settings surface. */
@@ -217,8 +226,11 @@ export class PetService extends Service {
   constructor(ctx: Context, config: PetConfig) {
     super(ctx, 'sakuragi')
     this.packageRoot = config.packageRoot
+    setMaterialRoot(config.materialRoot)
     seedBuiltinPet(config.packageRoot)
     seedBuiltinTheme()
+    ensurePetLibraryMeta()
+    ensureThemeLibraryMeta()
     this.activeId = activePetId()
     this.character = loadPet(this.activeId)
     this.persistDir = config.persistDir ?? petHomeDir()
@@ -239,9 +251,9 @@ export class PetService extends Service {
     return this.activeId
   }
 
-  /** Active pet's poses directory (upload target). */
+  /** Active pet's poses directory (upload target; layout-aware). */
   petPosesDir(): string {
-    return join(petsRoot(), this.activeId, 'poses')
+    return petPosesDirOf(this.activeId)
   }
 
   /** Reload the active pet's pack (reflects pose uploads without a restart). */
@@ -276,9 +288,9 @@ export class PetService extends Service {
     return { ok: true }
   }
 
-  /** Pose URL paths of the active pet. */
+  /** Pose URL paths of the active pet (live listing; layout-aware dir name). */
   poses(): string[] {
-    return this.character.poses.map(file => `/sakuragi/pets/${this.activeId}/poses/${file}`)
+    return listPoseFiles(this.activeId).map(file => `/sakuragi/pets/${this.activeId}/${poseDirName()}/${file}`)
   }
 
   /** List themes for the settings surface. */
@@ -301,7 +313,7 @@ export class PetService extends Service {
   /** Background URL paths of the active theme (empty → bundled fallback). */
   themeBackgrounds(): string[] {
     const id = activeThemeId()
-    return listThemeBackgrounds(id).map(file => `/sakuragi/themes/${id}/backgrounds/${file}`)
+    return listThemeBackgrounds(id).map(file => `/sakuragi/themes/${id}/${backgroundDirName()}/${file}`)
   }
 
   /** Backgrounds directory of the active theme (upload target). */
@@ -328,7 +340,7 @@ export class PetService extends Service {
       bubbles: pack.bubbles,
       reactions: pack.reactions,
       fallback: pack.fallback,
-      poses: pack.poses.map(file => `/sakuragi/pets/${id}/poses/${file}`),
+      poses: listPoseFiles(id).map(file => `/sakuragi/pets/${id}/${poseDirName()}/${file}`),
       music: {
         enabled: pack.music.enabled,
         files: listMusicFiles(id).map(file => `/sakuragi/pets/${id}/music/${file}`),
@@ -393,7 +405,7 @@ export class PetService extends Service {
     return {
       id,
       name: themeName(id),
-      backgrounds: listThemeBackgrounds(id).map(file => `/sakuragi/themes/${id}/backgrounds/${file}`),
+      backgrounds: listThemeBackgrounds(id).map(file => `/sakuragi/themes/${id}/${backgroundDirName()}/${file}`),
     }
   }
 

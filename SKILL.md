@@ -26,6 +26,25 @@ DSH Web GUI 的**主题 + 桌面宠物管理插件**。把「壁纸主题」和�
 
 首次启动把内置 `sakuragi` 宠物（樱木花道）+ `default` 主题（空壁纸，回退内置 3 张）播种进目录。之后一切操作都是对这套目录的增删选择，**换宠物/换主题零代码**。
 
+## 素材库模式（materialRoot）
+
+不配置时数据在 `~/.dsh/slamdunk/`（pets/ + themes/ 分离）；配置 `materialRoot` 后切换为「素材库」布局，**一个子文件夹 = 一个主题+宠物组合**（宠物和主题同名同文件夹）：
+
+```
+<materialRoot>/
+└── 灌篮高手/
+    ├── model/*          # 宠物造型（等价 legacy 的 poses/）
+    ├── img/*            # 主题壁纸（等价 legacy 的 backgrounds/）
+    ├── music/*          # 背景音乐（两种布局一致）
+    └── 卡通人物设置.rtf   # 用户备注，插件忽略
+```
+
+- profile 配置：`~/.dsh/profiles/web/cordis.patch.yml` → `- id: sakuragi-pet / config: { materialRoot: '<文件夹绝对路径>' }`。
+- 首次扫描（host 构造时 `ensureLibraryMeta`）为每个子文件夹补 `character.json`（名称=文件夹名）与 `theme.json`；`sakuragi` 文件夹只当宠物、`default` 只当主题，不互相补。
+- 文件夹名即 id（中文可用，sanitize 保留 Unicode 字母/数字），资产 URL 直接含中文路径（浏览器自动百分号编码）。
+- 编辑弹窗的上传/改名/删除都直接写回素材库文件夹（`model`/`img`/`music`）。
+- `model`/`img` 为空时宠物无形象、壁纸回退内置；放入图片后**不用重启**：poses 每次实时列目录，壁纸 AppFrame 30 秒轮询。
+
 ## 包结构（双半区，`dsh plugin add` 安装）
 
 `packages/pet/sakuragi/`（`@deepseek-ai/dsh-sakuragi`）——一个包同时含 host 半区 + browser 半区：
@@ -48,7 +67,7 @@ DSH Web GUI 的**主题 + 桌面宠物管理插件**。把「壁纸主题」和�
 | `POST /api/sakuragi/pets/music-toggle` | 背景音乐开关（`{ id, enabled }`） |
 | `POST /api/sakuragi/pets/delete` / `themes/delete` | 删除（`{ id }`；删激活项自动回退内置） |
 | `POST /api/sakuragi/music/delete` | 删除宠物的一首音乐（`{ id, name }`） |
-| `POST /api/sakuragi/upload?kind=background\|pose\|music&id=...&name=...` | 上传（raw body）：背景→主题 backgrounds/，姿势→宠物 poses/，音乐→宠物 music/ |
+| `POST /api/sakuragi/upload?kind=background\|pose\|music&id=...&name=...` | 上传（raw body）：背景→主题 `img/`（素材库）/`backgrounds/`（legacy），姿势→宠物 `model/`/`poses/`，音乐→宠物 `music/` |
 | `GET /api/sakuragi/backgrounds` | 激活主题的背景 URL 列表（空则回退内置壁纸） |
 | `GET /sakuragi/pets/<id>/...` / `themes/<id>/...` | 静态服务（前缀路由，逐段 sanitize 防穿越） |
 | `GET /sakuragi/character.json` | 激活宠物的人设（客户端聊天规则） |

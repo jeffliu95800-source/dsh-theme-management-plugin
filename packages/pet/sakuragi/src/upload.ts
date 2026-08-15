@@ -19,10 +19,12 @@ export function backgroundsDir(): string {
   return join(uploadRoot(), 'backgrounds')
 }
 
-/** Sanitize a user-supplied filename to a safe basename (no path traversal). */
+/** Sanitize a user-supplied filename to a safe basename (no path traversal).
+ * Keeps letters/numbers of any script (CJK folder names survive) plus
+ * `._-`; strips separators and control/punctuation characters. */
 export function sanitizeName(name: string): string {
   const base = name.replace(/\\/g, '/').split('/').pop() ?? ''
-  return base.replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 120)
+  return base.replace(/[^\p{L}\p{N}._-]/gu, '_').slice(0, 120)
 }
 
 /** Save one uploaded file into a directory; returns the stored filename. */

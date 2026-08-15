@@ -12,6 +12,29 @@ DeepSeek Harness Web GUI 的**主题与桌面宠物管理插件**：把「壁纸
 | 桌面宠物 | 多宠物（SVG 矢量角色，每小时换造型），新建/切换/开关/删除，编辑弹窗：**人物名称（替换）**、**人物形象上传（替换）**、**非互动状态语录（替换）**、**点按钮互动状态语录（替换）**、**背景音乐（开启/关闭/上传/删除）** |
 | 互动按钮 | 宠物本体只保留 3 个互动按钮（摸头 / 传球 / 聊）+ 1 个隐藏按钮；上传入口全部收进设置里的编辑弹窗 |
 
+## 素材库模式（materialRoot）
+
+插件默认从 `~/.dsh/slamdunk/` 读数据；也可配置指向一个「素材库文件夹」（如 `dsh theme`），文件夹里每个子文件夹 = 一个主题+卡通人物组合：
+
+```
+dsh theme/
+└── 灌篮高手/
+    ├── model/*          # 人物造型图（SVG/PNG…，宠物姿势）
+    ├── img/*            # 主题壁纸
+    ├── music/*          # 背景音乐（mp3/ogg/wav/flac…）
+    └── 卡通人物设置.rtf   # 备注文档（插件会忽略）
+```
+
+配置方法：在 profile 的 `~/.dsh/profiles/web/cordis.patch.yml` 里给插件覆盖 config：
+
+```yaml
+- id: sakuragi-pet
+  config:
+    materialRoot: '/Users/jeff/Downloads/dsh theme'
+```
+
+首次扫描时插件会为每个子文件夹自动生成 `character.json`（名称=文件夹名）与 `theme.json`；之后在设置里编辑/上传/删除都会直接写回这个文件夹。`model` 为空时宠物暂不显示形象，放入图片后刷新即出现（`img` 同理作用于壁纸，AppFrame 30 秒内轮询到）。
+
 ## 目录结构
 
 ```
