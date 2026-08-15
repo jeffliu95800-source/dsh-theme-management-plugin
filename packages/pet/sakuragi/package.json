@@ -1,7 +1,7 @@
 {
   "name": "@jeffliu95800/dsh-sakuragi",
   "description": "Slam Dunk desktop pet (dual-half): character-pack-driven Sakuragi pet — host state machine + /api/sakuragi/* routes + settings, browser pose/chat UI. Install via `dsh plugin add`.",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "module",
   "main": "lib/index.js",
   "types": "lib/types/index.d.ts",
