@@ -8,7 +8,7 @@
   max-height: 360px;
   display: flex;
   flex-direction: column;
-  background: color-mix(in srgb, var(--dsw-alias-bg-overlay) 80%, transparent);
+  background: color-mix(in srgb, var(--dsw-alias-bg-overlay) 90%, transparent);
   border: 1px solid var(--dsw-alias-border-l2);
   border-radius: 16px;
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.22);
