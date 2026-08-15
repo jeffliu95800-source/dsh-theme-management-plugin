@@ -95,6 +95,10 @@ function contentTypeFor(name: string): string {
   if (n.endsWith('.wav')) return 'audio/wav'
   if (n.endsWith('.m4a') || n.endsWith('.aac')) return 'audio/mp4'
   if (n.endsWith('.flac')) return 'audio/flac'
+  if (n.endsWith('.mp4') || n.endsWith('.m4v')) return 'video/mp4'
+  if (n.endsWith('.webm')) return 'video/webm'
+  if (n.endsWith('.ogv')) return 'video/ogg'
+  if (n.endsWith('.mov')) return 'video/quicktime'
   return 'application/octet-stream'
 }
 

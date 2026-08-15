@@ -122,10 +122,15 @@ export function themeBackgroundsDir(id: string): string {
   return join(themeDir(id), backgroundDirName())
 }
 
-/** Background filenames for one theme (sorted). */
+/** Image + video extensions accepted as wallpapers. */
+const BACKGROUND_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.svg', '.mp4', '.m4v', '.webm', '.ogv', '.mov']
+
+/** Background media filenames for one theme (images + videos; sorted). */
 export function listThemeBackgrounds(id: string): string[] {
   try {
-    return readdirSync(themeBackgroundsDir(id)).sort()
+    return readdirSync(themeBackgroundsDir(id))
+      .filter(file => BACKGROUND_EXTENSIONS.some(ext => file.toLowerCase().endsWith(ext)))
+      .sort()
   } catch {
     return []
   }
