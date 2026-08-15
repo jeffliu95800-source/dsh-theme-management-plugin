@@ -58,6 +58,11 @@ dsh plugin --profile web add link:<checkout>/packages/pet/sakuragi
 > 安装后会自动把包加进 profile 的 `dsh.profile.bundles`，无需手动改配置。
 > 注意 CLI 顺序：`--profile` 是**全局** flag，要放在 `web` 之前（`dsh --profile web --port 3091`）；`dsh web` 本身是 `--profile web` 的别名，不能再带 `--profile`。
 
+> **⚠️ 避坑（务必读）**：
+> 1. **开发阶段不要写 scope 包名**——`@jeffliu95800/dsh-sakuragi` 在 `npm publish` 成功前不存在于 registry，`dsh plugin add @jeffliu95800/dsh-sakuragi` 会找不到 → **启动直接崩溃**。开发期只用「方式 C `link:`」或「方式 A `file:` .tgz」。
+> 2. **`file:` 必须是绝对路径，且指向构建产物**（打包好的 `.tgz`，或含 `lib/` 的目录），**不要指向 `src/` 源码目录**（未构建，`main: lib/index.js` 找不到会崩）。
+> 3. **只有真正 `npm publish --access public` 成功之后**，才可以用 scope 包名（方式 B）。
+
 ---
 
 ## 四、配置素材库模式（materialRoot，推荐）
@@ -160,3 +165,5 @@ curl -I http://127.0.0.1:3091/sakuragi/pets/sakuragi/poses/pose_waving.svg  # 20
 | 音乐不响 | 浏览器自动播放限制，先点一下页面任意处 |
 | `dsh web --profile xxx` 报错 | `--profile` 是全局 flag，用 `dsh --profile xxx web` |
 | 视频壁纸不播 | 确认文件直接放 `img/`（不放子文件夹），且扩展名是 mp4/webm/mov |
+| 启动崩溃 / 找不到包 | 开发期别用 scope 包名安装；未 `npm publish` 前用 `link:` 或 `file:` |
+| `file:` 装完就崩 | `file:` 必须指向绝对路径的 `.tgz`（或含 `lib/` 的目录），别指 `src/` 源码 |

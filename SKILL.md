@@ -97,6 +97,8 @@ pnpm dsh plugin --profile web add link:<checkout>/packages/pet/sakuragi   # 本�
 
 重启 `dsh web` + 硬刷新页面。
 
+> **避坑**：开发阶段不要用 scope 包名（`@jeffliu95800/dsh-sakuragi`）安装——未 `npm publish` 前 registry 上不存在，会直接启动崩溃；用 `link:`（指向源码 checkout）或 `file:`（指向打包好的 `.tgz` 绝对路径，勿指 `src/`）。只有 `npm publish --access public` 成功后才可用 scope 包名。
+
 ## 编辑弹窗（设置 → 通用设置）
 
 - **桌面宠物 → 每个宠物行「编辑」**：人物名称（替换）、人物形象上传（替换，`image/*,.svg`）、逐张删除形象（soft-delete，文件留盘）、非互动状态语录（bubbles 5 个阶段）、点按钮互动状态语录（reactions 4 条）、背景音乐（开启/关闭/上传/删除，`audio/*`）、删除卡通人物。文本字段点「保存」统一写入；上传/开关/删除即时生效。
