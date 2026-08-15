@@ -5,6 +5,10 @@
 
 ---
 
+> **⚠️ 版权免责声明**：本插件内置的示例素材（卡通人物形象、背景音乐、壁纸图片）**版权归原作者 / 版权方所有**，仅用于功能演示，**请勿商用**。正式使用时请替换为你**原创或已获授权**的素材。
+
+---
+
 ## 一、前置依赖（必备环境）
 
 | 依赖 | 版本 | 说明 |
@@ -38,7 +42,7 @@ dsh web          # 或 dsh --profile web --port <端口>
 
 **方式 A：本地 .tgz（最简，无需 npm 账号）**
 ```sh
-dsh plugin --profile web add /path/to/deepseek-ai-dsh-sakuragi-0.1.0-rc.5.tgz
+dsh plugin --profile web add /path/to/jeffliu95800-dsh-sakuragi-1.0.0.tgz
 ```
 
 **方式 B：npm 包（发布后）**
