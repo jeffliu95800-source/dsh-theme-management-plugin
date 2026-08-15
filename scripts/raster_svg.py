@@ -14,7 +14,7 @@ import base64
 from collections import deque
 from PIL import Image
 
-BG_TOLERANCE = 30      # remove ONLY the connected white/background
+BG_TOLERANCE = 10      # remove ONLY the connected white/background (tight: keep light face/shirt)
 WHITE_CROP = 235       # crop pixels with all channels >= this (near-white halo)
 CROP_PAD = 3
 
