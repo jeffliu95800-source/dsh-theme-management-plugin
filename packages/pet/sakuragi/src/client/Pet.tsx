@@ -127,11 +127,15 @@ export function Pet({ useStore, t, pet, pass, hide, summon, send, clear, feedbac
     })
   }, [snapshot])
 
-  // Background music: play the first enabled track; restart on track change.
+  // Background music: loop through the enabled track list (advance on end).
   // Autoplay may be blocked until the user interacts with the page.
-  const musicSrc = snapshot !== null && snapshot.music?.enabled === true && (snapshot.music.files?.length ?? 0) > 0
-    ? snapshot.music.files[0]
-    : undefined
+  const [musicIndex, setMusicIndex] = useState(0)
+  const musicFiles = snapshot !== null && snapshot.music?.enabled === true ? (snapshot.music.files ?? []) : []
+  const musicSrc = musicFiles.length > 0 ? musicFiles[musicIndex % musicFiles.length] : undefined
+  // Reset the playlist position whenever the track list changes (upload/delete/toggle).
+  useEffect(() => {
+    setMusicIndex(0)
+  }, [musicFiles.join('\n')])
   useEffect(() => {
     const el = audioRef.current
     if (el === null || musicSrc === undefined) return
@@ -237,7 +241,7 @@ export function Pet({ useStore, t, pet, pass, hide, summon, send, clear, feedbac
       style={{ left: pos.x, top: pos.y }}
       data-dragging={dragging || undefined}
     >
-      {musicSrc !== undefined && <audio ref={audioRef} src={musicSrc} loop />}
+      {musicSrc !== undefined && <audio ref={audioRef} src={musicSrc} onEnded={() => { setMusicIndex(i => (i + 1) % musicFiles.length) }} />}
       {line !== undefined && (
         <div className={css.bubble} onClick={feedbackDone}>{line}</div>
       )}
