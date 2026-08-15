@@ -12,6 +12,7 @@
 }
 
 .portrait {
+  position: relative;
   cursor: grab;
   touch-action: none;
 }
@@ -54,12 +55,20 @@
   animation: pop 0.2s ease-out;
 }
 
-.actions {
-  display: flex;
-  gap: 6px;
+/* Fan action menu: an anchor point at the portrait center; buttons are
+ * absolutely positioned around it, fanned to the right (top → bottom). */
+.fanMenu {
+  position: absolute;
+  width: 0;
+  height: 0;
+  z-index: 10;
+  pointer-events: none;
 }
 
-.action {
+.fanBtn {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  pointer-events: auto;
   padding: 3px 10px;
   border-radius: 12px;
   border: 1px solid var(--dsw-alias-border-l2);
@@ -67,12 +76,19 @@
   color: var(--dsw-alias-label-primary);
   font-size: 12px;
   line-height: 20px;
+  white-space: nowrap;
   cursor: pointer;
+  animation: fanPop 0.18s ease-out;
   transition: background var(--ds-transition-duration-slow) var(--ds-ease-in-out);
 }
 
-.action:hover {
+.fanBtn:hover {
   background: color-mix(in srgb, var(--dsw-alias-interactive-bg-hover) 80%, transparent);
+}
+
+@keyframes fanPop {
+  from { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+  to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 }
 
 .summon {

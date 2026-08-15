@@ -60,6 +60,7 @@ export function Pet({ useStore, t, pet, pass, hide, summon, send, clear, feedbac
   const feedback = useStore(s => s.feedback)
   const messages = useStore(s => s.messages)
   const [chatOpen, setChatOpen] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
   const [tilt, setTilt] = useState({ x: 0, y: 0 })
   const [dragging, setDragging] = useState(false)
   const [poseIndex, setPoseIndex] = useState(() => poseIndexNow(1))
@@ -139,6 +140,8 @@ export function Pet({ useStore, t, pet, pass, hide, summon, send, clear, feedbac
   }, [musicSrc])
 
   const onPointerDown = (e: React.PointerEvent<HTMLDivElement>): void => {
+    // Let clicks on the fan-menu buttons through without starting a drag.
+    if ((e.target as HTMLElement | null)?.closest('button') !== null) return
     dragRef.current = { active: true, startX: e.clientX, startY: e.clientY, posX: pos.x, posY: pos.y, moved: false }
     setDragging(true)
     e.currentTarget.setPointerCapture(e.pointerId)
@@ -161,7 +164,7 @@ export function Pet({ useStore, t, pet, pass, hide, summon, send, clear, feedbac
     dragRef.current.active = false
     setDragging(false)
     if (!dragRef.current.moved) {
-      setChatOpen(open => !open)
+      setMenuOpen(open => !open)
       return
     }
     const el = petRef.current
@@ -170,6 +173,37 @@ export function Pet({ useStore, t, pet, pass, hide, summon, send, clear, feedbac
       dragEnd(window.innerWidth - rect.right, window.innerHeight - rect.bottom)
     }
   }
+
+  // Dismiss the fan menu: close on an outside click, or after 5 s of the
+  // cursor leaving the pet + menu area.
+  useEffect(() => {
+    if (!menuOpen) return
+    let leaveTimer = 0
+    const inArea = (x: number, y: number): boolean => {
+      const rect = petRef.current?.getBoundingClientRect()
+      if (rect === undefined) return false
+      const pad = sizeRef.current * 1.4
+      return x >= rect.left - pad && x <= rect.right + pad && y >= rect.top - pad && y <= rect.bottom + pad
+    }
+    const onMove = (e: MouseEvent): void => {
+      window.clearTimeout(leaveTimer)
+      if (!inArea(e.clientX, e.clientY)) {
+        leaveTimer = window.setTimeout(() => { setMenuOpen(false) }, 5000)
+      }
+    }
+    const onDown = (e: MouseEvent): void => {
+      const target = e.target as Node | null
+      if (target !== null && petRef.current?.contains(target)) return
+      setMenuOpen(false)
+    }
+    document.addEventListener('mousemove', onMove)
+    document.addEventListener('mousedown', onDown)
+    return () => {
+      document.removeEventListener('mousemove', onMove)
+      document.removeEventListener('mousedown', onDown)
+      window.clearTimeout(leaveTimer)
+    }
+  }, [menuOpen])
 
   if (snapshot === null) return null
 
@@ -186,6 +220,15 @@ export function Pet({ useStore, t, pet, pass, hide, summon, send, clear, feedbac
   const activePose = poses.length > 0 ? poses[poseIndex % poses.length] : undefined
   const petLabel = actions?.pet?.trim() ? actions.pet : '摸头'
   const passLabel = actions?.pass?.trim() ? actions.pass : '传球'
+
+  // Fan menu: four buttons fanned out to the right of the character, top → bottom.
+  const fanButtons = [
+    { label: petLabel, run: pet },
+    { label: passLabel, run: pass },
+    { label: '聊', run: (): void => { setChatOpen(true); setMenuOpen(false) } },
+    { label: '隐藏', run: hide },
+  ]
+  const fanRadius = display.size * 0.8
 
   return (
     <div
@@ -218,12 +261,22 @@ export function Pet({ useStore, t, pet, pass, hide, summon, send, clear, feedbac
             />
           )}
         </div>
-      </div>
-      <div className={css.actions}>
-        <button type="button" className={css.action} onClick={pet}>{petLabel}</button>
-        <button type="button" className={css.action} onClick={pass}>{passLabel}</button>
-        <button type="button" className={css.action} onClick={() => { setChatOpen(o => !o) }}>聊</button>
-        <button type="button" className={css.action} onClick={hide}>隐藏</button>
+        {menuOpen && (
+          <div className={css.fanMenu} style={{ left: display.size / 2, top: display.size / 2 }}>
+            {fanButtons.map((b, i) => {
+              const angle = ((-55 + i * (110 / 3)) * Math.PI) / 180
+              return (
+                <button
+                  key={b.label}
+                  type="button"
+                  className={css.fanBtn}
+                  style={{ left: Math.cos(angle) * fanRadius, top: Math.sin(angle) * fanRadius }}
+                  onClick={b.run}
+                >{b.label}</button>
+              )
+            })}
+          </div>
+        )}
       </div>
       {chatOpen && (
         <ChatPopup
