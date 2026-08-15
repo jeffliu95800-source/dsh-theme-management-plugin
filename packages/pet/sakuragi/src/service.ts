@@ -402,6 +402,13 @@ export class PetService extends Service {
     return { ok }
   }
 
+  /** Delete one pose image of a pet. */
+  async deletePetPose(id: string, name: string): Promise<{ ok: boolean }> {
+    const ok = deleteFile(petPosesDirOf(id), name)
+    if (this.activeId === id) this.reloadCharacter()
+    return { ok }
+  }
+
   /** Delete a pet; the active selection falls back to the built-in. */
   async deletePet(id: string): Promise<{ ok: true } | { ok: false; error: string }> {
     if (!listPetIds().includes(id)) return { ok: false, error: 'unknown-pet' }

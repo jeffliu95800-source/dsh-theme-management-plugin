@@ -255,6 +255,12 @@ export function makePetRoutes(deps: { service: PetService }): WebRoute[] {
       if (typeof id !== 'string' || typeof name !== 'string') return Promise.reject(new Error('invalid-args'))
       return service.deleteMusic(id, name)
     }),
+    postRoute(`${PET_API_PREFIX}/pets/pose-delete`, (body) => {
+      const id = body.id
+      const name = body.name
+      if (typeof id !== 'string' || typeof name !== 'string') return Promise.reject(new Error('invalid-args'))
+      return service.deletePetPose(id, name)
+    }),
     postRoute(`${PET_API_PREFIX}/themes/config`, (body) => {
       const id = body.id
       if (typeof id !== 'string') return Promise.reject(new Error('invalid-id'))

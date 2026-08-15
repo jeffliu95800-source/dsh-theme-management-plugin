@@ -26,6 +26,7 @@ export interface PetSettingsInjected {
   deletePet: (id: string) => Promise<void>
   uploadPetAsset: (kind: 'pose' | 'music', id: string, name: string, data: Blob) => Promise<void>
   deleteMusic: (id: string, name: string) => Promise<void>
+  deletePetPose: (id: string, name: string) => Promise<void>
   getThemeConfig: (id: string) => Promise<ThemeConfigView>
   renameTheme: (id: string, name: string) => Promise<void>
   deleteTheme: (id: string) => Promise<void>
@@ -58,6 +59,7 @@ export function PetSettingsRow({
   deletePet,
   uploadPetAsset,
   deleteMusic,
+  deletePetPose,
   getThemeConfig,
   renameTheme,
   deleteTheme,
@@ -145,6 +147,7 @@ export function PetSettingsRow({
           deletePet={deletePet}
           uploadAsset={uploadPetAsset}
           deleteMusic={deleteMusic}
+          deletePose={deletePetPose}
           onClose={() => { setEditingPet(null) }}
         />
       )}

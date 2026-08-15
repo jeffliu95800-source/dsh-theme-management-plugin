@@ -170,6 +170,8 @@ export function apply(ctx: ClientContext): void {
         .then(() => { pollNow(); if (kind === 'pose') refreshCharacterChat() }),
     deleteMusic: (id: string, name: string) =>
       petFetch('/api/sakuragi/music/delete', { id, name }).then(() => { pollNow() }),
+    deletePetPose: (id: string, name: string) =>
+      petFetch('/api/sakuragi/pets/pose-delete', { id, name }).then(() => { pollNow(); refreshCharacterChat() }),
     getThemeConfig: (id: string) => petFetch<ThemeConfigView>('/api/sakuragi/themes/config', { id }),
     renameTheme: (id: string, name: string) => petFetch('/api/sakuragi/themes/rename', { id, name })
       .then(() => { refreshLists() }),

@@ -28,6 +28,7 @@ export interface PetEditModalProps {
   deletePet: (id: string) => Promise<void>
   uploadAsset: (kind: 'pose' | 'music', id: string, name: string, data: Blob) => Promise<void>
   deleteMusic: (id: string, name: string) => Promise<void>
+  deletePose: (id: string, name: string) => Promise<void>
   onClose: () => void
 }
 
@@ -46,6 +47,7 @@ export function PetEditModal({
   deletePet,
   uploadAsset,
   deleteMusic,
+  deletePose,
   onClose,
 }: PetEditModalProps) {
   const [config, setConfig] = useState<PetConfigView | null>(null)
@@ -115,6 +117,12 @@ export function PetEditModal({
     deleteMusic(id, file).then(reload, () => {})
   }
 
+  const onDeletePose = (src: string): void => {
+    const fileName = src.split('/').pop() ?? src
+    if (!window.confirm(`确定删除形象「${fileName}」吗？`)) return
+    deletePose(id, fileName).then(reload, () => {})
+  }
+
   const onDeletePet = (): void => {
     if (!window.confirm(`确定删除卡通人物「${name}」吗？删除后不可恢复。`)) return
     deletePet(id).then(onClose, () => {})
@@ -144,12 +152,15 @@ export function PetEditModal({
               />
             </section>
 
-            {/* 人物形象上传（只能上传替换） */}
+            {/* 人物形象上传（上传/删除） */}
             <section className={css.field}>
-              <h4 className={css.label}>人物形象（上传替换）</h4>
+              <h4 className={css.label}>人物形象（上传/删除）</h4>
               <div className={css.thumbRow}>
                 {config.poses.map(src => (
-                  <img key={src} className={css.thumb} src={src} alt="造型" />
+                  <div key={src} className={css.thumbItem}>
+                    <img className={css.thumb} src={src} alt="造型" />
+                    <button type="button" className={css.thumbDel} onClick={() => { onDeletePose(src) }} aria-label="删除形象">×</button>
+                  </div>
                 ))}
                 {config.poses.length === 0 && <span className={css.emptyHint}>暂无形象，请上传</span>}
               </div>
