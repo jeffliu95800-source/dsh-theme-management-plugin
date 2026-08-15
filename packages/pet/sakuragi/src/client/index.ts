@@ -177,6 +177,8 @@ export function apply(ctx: ClientContext): void {
       .then(() => { refreshLists() }),
     uploadThemeBackground: (id: string, name: string, data: Blob) =>
       petUpload(`/api/sakuragi/upload?kind=background&id=${encodeURIComponent(id)}&name=${encodeURIComponent(name)}`, data),
+    deleteThemeBackground: (id: string, name: string) =>
+      petFetch('/api/sakuragi/themes/background-delete', { id, name }).then(() => { refreshLists() }),
     }
   }
 

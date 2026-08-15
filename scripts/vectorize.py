@@ -1,29 +1,26 @@
-"""Convert character-view PNGs (black background) into flat-color vector SVGs.
+"""Convert character photos (white/black background) into clean flat-color SVGs.
 
-Pure Pillow + marching-squares tracing: remove the connected background by
-border flood-fill, median-cut quantize the character into a few colors, trace
-each color's region into SVG paths (transparent background, crisp vectors —
-the same look family as the hand-drawn Sakuragi poses).
+Pipeline: remove only the CONNECTED background by border flood-fill (keep every
+other color), threshold the alpha edge, TIGHT-CROP to the figure bounding box
+(so it fills the frame like the Sakuragi poses), lightly de-noise, then
+median-cut quantize + full-resolution marching-squares tracing.
 
-Usage: python3 vectorize.py <outdir>
+Usage: python3 vectorize.py <image-or-dir> [outdir]
 """
 import sys
 import os
-from collections import deque
-from PIL import Image
+from collections import deque, defaultdict
+from PIL import Image, ImageFilter
 
-VIEWS = {
-    'front': '/Users/jeff/Downloads/凡人照片/韩立上.png',
-    'side': '/Users/jeff/Downloads/凡人照片/韩立侧.png',
-    'back': '/Users/jeff/Downloads/凡人照片/韩立后model.png',
-    'top': '/Users/jeff/Downloads/凡人照片/IMG_1349.png',
-}
-
-BG_TOLERANCE = 40
-TRACE_SCALE = 0.55     # trace at half resolution, then the SVG scales freely
-COLORS = 12            # flat-color palette size
-MIN_AREA = 12          # drop speckles smaller than this (scaled px^2)
-EPS = 0.6              # Douglas-Peucker simplification epsilon (scaled px)
+# Tuning
+BG_TOLERANCE = 30      # per-channel distance to the background color (remove ONLY white/bg)
+ALPHA_THRESHOLD = 110  # alpha below this becomes fully transparent (clean edge)
+COLORS = 12            # flat-color palette size (keeps detail, avoids banding)
+MIN_AREA = 8           # drop speckles smaller than this (px^2 at full res)
+EPS = 0.6              # Douglas-Peucker simplification epsilon
+BLUR = 0.5             # slight pre-quantize blur to suppress source grain
+TRACE_SCALE = 0.6      # trace at reduced resolution for compact paths
+ERODE = 2              # erode the alpha mask by N px to shave the anti-aliased halo
 
 
 def remove_background(rgba: Image.Image, tolerance=BG_TOLERANCE) -> Image.Image:
@@ -58,8 +55,60 @@ def remove_background(rgba: Image.Image, tolerance=BG_TOLERANCE) -> Image.Image:
     return rgba
 
 
+def tight_crop(rgba: Image.Image, threshold=ALPHA_THRESHOLD) -> Image.Image:
+    w, h = rgba.size
+    px = rgba.load()
+    minx, miny, maxx, maxy = w, h, -1, -1
+    for y in range(h):
+        for x in range(w):
+            if px[x, y][3] >= threshold:
+                if x < minx: minx = x
+                if x > maxx: maxx = x
+                if y < miny: miny = y
+                if y > maxy: maxy = y
+    if maxx < minx:
+        return rgba
+    pad = 2
+    minx = max(0, minx - pad)
+    miny = max(0, miny - pad)
+    maxx = min(w - 1, maxx + pad)
+    maxy = min(h - 1, maxy + pad)
+    return rgba.crop((minx, miny, maxx + 1, maxy + 1))
+
+
+def erode_alpha(rgba: Image.Image, radius=ERODE) -> Image.Image:
+    """Erode the opaque mask by `radius` px: any opaque pixel with a transparent
+    neighbor within the radius becomes transparent. Removes the anti-aliased
+    halo ring around the figure (source of both noise and a bloated crop box)."""
+    w, h = rgba.size
+    px = rgba.load()
+    out = rgba.copy()
+    opx = out.load()
+    for y in range(h):
+        for x in range(w):
+            if px[x, y][3] < ALPHA_THRESHOLD:
+                continue
+            # check a (2r+1) box for any transparent pixel
+            clear = False
+            for dy in range(-radius, radius + 1):
+                yy = y + dy
+                if yy < 0 or yy >= h:
+                    continue
+                for dx in range(-radius, radius + 1):
+                    xx = x + dx
+                    if xx < 0 or xx >= w:
+                        continue
+                    if px[xx, yy][3] < ALPHA_THRESHOLD:
+                        clear = True
+                        break
+                if clear:
+                    break
+            if clear:
+                opx[x, y] = (px[x, y][0], px[x, y][1], px[x, y][2], 0)
+    return out
+
+
 def median_cut(pixels, n):
-    """Median-cut quantize a list of (r,g,b) into n buckets -> (palette, ids)."""
     buckets = [pixels]
     while len(buckets) < n:
         def span(b):
@@ -87,18 +136,11 @@ def median_cut(pixels, n):
 
 
 def trace_mask(mask, w, h):
-    """Marching squares on a 2D boolean grid; returns list of point lists (closed loops).
-
-    The mask is padded with a border of background so every contour closes.
-    Per cell: midpoints of transitioning edges are connected within the cell
-    (two edges → one segment; the four-edge saddle → two diagonal segments).
-    """
     pw, ph = w + 2, h + 2
     padded = [[False] * pw for _ in range(ph)]
     for y in range(h):
         for x in range(w):
             padded[y + 1][x + 1] = mask[y][x]
-
     segs = []
     for cy in range(ph - 1):
         row = padded[cy]
@@ -109,25 +151,16 @@ def trace_mask(mask, w, h):
             bl = 1 if row2[cx] else 0
             br = 1 if row2[cx + 1] else 0
             pts = []
-            if tl != tr:
-                pts.append((cx + 0.5, cy))
-            if tr != br:
-                pts.append((cx + 1, cy + 0.5))
-            if bl != br:
-                pts.append((cx + 0.5, cy + 1))
-            if tl != bl:
-                pts.append((cx, cy + 0.5))
+            if tl != tr: pts.append((cx + 0.5, cy))
+            if tr != br: pts.append((cx + 1, cy + 0.5))
+            if bl != br: pts.append((cx + 0.5, cy + 1))
+            if tl != bl: pts.append((cx, cy + 0.5))
             if len(pts) == 2:
                 segs.append((pts[0], pts[1]))
             elif len(pts) == 4:
                 segs.append((pts[0], pts[2]))
                 segs.append((pts[1], pts[3]))
-
-    # Link segments into closed loops: each grid-edge midpoint is touched by
-    # exactly two cell segments (one from each adjacent cell), so walking from
-    # segment to segment by shared endpoint closes the ring.
     key = lambda p: (round(p[0] * 2), round(p[1] * 2))
-    from collections import defaultdict
     touch = defaultdict(list)
     for idx, (s, t) in enumerate(segs):
         touch[key(s)].append(idx)
@@ -157,7 +190,6 @@ def trace_mask(mask, w, h):
             else:
                 loop.append(s)
                 tail = s
-        # shift loop points back into unpadded coordinates
         loops.append([(x - 1, y - 1) for x, y in loop])
     return loops
 
@@ -165,8 +197,7 @@ def trace_mask(mask, w, h):
 def simplify(points, eps):
     if len(points) <= 3:
         return points
-    # Douglas-Peucker on the closed loop (points[0] == points[-1] conceptually)
-    pts = points[:-1] if len(points) > 1 and points[0] == points[-1] else points
+    pts = points[:-1] if points[0] == points[-1] else points
     if len(pts) <= 2:
         return points
 
@@ -190,9 +221,7 @@ def simplify(points, eps):
             if d > dmax:
                 dmax, idx = d, k
         if dmax > eps:
-            left = dp(lo, idx)
-            right = dp(idx, hi)
-            return left[:-1] + right
+            return dp(lo, idx)[:-1] + dp(idx, hi)
         return [pts[lo], pts[hi]]
 
     kept = dp(0, len(pts) - 1)
@@ -215,42 +244,45 @@ def polygon_d(points):
 def vectorize(path, out_svg, ncolors=COLORS):
     rgba = Image.open(path).convert('RGBA')
     rgba = remove_background(rgba)
+    rgba = erode_alpha(rgba)
+    rgba = tight_crop(rgba)
+    if BLUR > 0:
+        rgba = rgba.filter(ImageFilter.GaussianBlur(BLUR))
+    # trace at reduced resolution, then scale coordinates back to full size
     w, h = rgba.size
     tw, th = max(1, int(w * TRACE_SCALE)), max(1, int(h * TRACE_SCALE))
+    sx, sy = w / tw, h / th
     small = rgba.resize((tw, th), Image.LANCZOS)
-    spx = small.load()
+    px = small.load()
 
-    # opaque pixel colors for quantization
     opaque = []
     for y in range(th):
         for x in range(tw):
-            p = spx[x, y]
-            if p[3] > 60:
+            p = px[x, y]
+            if p[3] >= ALPHA_THRESHOLD:
                 opaque.append((p[0], p[1], p[2]))
     if not opaque:
         print('  (no opaque pixels)')
         return
     palette, by_color = median_cut(opaque, ncolors)
 
-    # group pixels by bucket -> masks
     masks = {i: [[False] * tw for _ in range(th)] for i in range(len(palette))}
     for y in range(th):
         for x in range(tw):
-            p = spx[x, y]
-            if p[3] > 60:
-                idx = by_color[(p[0], p[1], p[2])]
-                masks[idx][y][x] = True
+            p = px[x, y]
+            if p[3] >= ALPHA_THRESHOLD:
+                masks[by_color[(p[0], p[1], p[2])]][y][x] = True
 
     parts = []
     for idx in range(len(palette)):
-        mask = masks[idx]
-        loops = trace_mask(mask, tw, th)
+        loops = trace_mask(masks[idx], tw, th)
         paths = []
         for loop in loops:
             simp = simplify(loop, EPS)
             if area(simp) < MIN_AREA:
                 continue
-            paths.append(polygon_d(simp))
+            scaled = [(x * sx, y * sy) for x, y in simp]
+            paths.append(polygon_d(scaled))
         if paths:
             r, g, b = palette[idx]
             parts.append(f'  <path fill="rgb({r},{g},{b})" d="{" ".join(paths)}"/>')
@@ -265,13 +297,19 @@ def vectorize(path, out_svg, ncolors=COLORS):
 
 
 def main():
-    outdir = sys.argv[1] if len(sys.argv) > 1 else '.'
+    target = sys.argv[1]
+    outdir = sys.argv[2] if len(sys.argv) > 2 else (target if os.path.isdir(target) else os.path.dirname(target))
     os.makedirs(outdir, exist_ok=True)
-    for name, path in VIEWS.items():
-        out = os.path.join(outdir, f'{name}.svg')
-        print(f'== {name}: {os.path.basename(path)} -> {out}')
-        vectorize(path, out)
-        print(f'   wrote {out} ({os.path.getsize(out)} bytes)')
+    exts = {'.jpg', '.jpeg', '.png', '.webp', '.bmp', '.gif'}
+    if os.path.isdir(target):
+        files = [f for f in sorted(os.listdir(target)) if os.path.splitext(f)[1].lower() in exts]
+        items = [(os.path.join(target, f), os.path.join(outdir, os.path.splitext(f)[0] + '.svg')) for f in files]
+    else:
+        items = [(target, os.path.join(outdir, os.path.splitext(os.path.basename(target))[0] + '.svg'))]
+    for src, out in items:
+        print(f'== {os.path.basename(src)} -> {os.path.basename(out)}')
+        vectorize(src, out)
+        print(f'   {os.path.getsize(out)} bytes')
 
 
 if __name__ == '__main__':

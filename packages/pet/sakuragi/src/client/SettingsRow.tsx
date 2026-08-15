@@ -30,6 +30,7 @@ export interface PetSettingsInjected {
   renameTheme: (id: string, name: string) => Promise<void>
   deleteTheme: (id: string) => Promise<void>
   uploadThemeBackground: (id: string, name: string, data: Blob) => Promise<void>
+  deleteThemeBackground: (id: string, name: string) => Promise<void>
 }
 
 /** Full component props: runtime + store + locale seats and the injected face. */
@@ -61,6 +62,7 @@ export function PetSettingsRow({
   renameTheme,
   deleteTheme,
   uploadThemeBackground,
+  deleteThemeBackground,
   t,
 }: PetSettingsProps) {
   const visible = useStore(s => s.snapshot?.display.visible ?? true)
@@ -153,6 +155,7 @@ export function PetSettingsRow({
           renameTheme={renameTheme}
           deleteTheme={deleteTheme}
           uploadBackground={uploadThemeBackground}
+          deleteBackground={deleteThemeBackground}
           onClose={() => { setEditingTheme(null) }}
         />
       )}

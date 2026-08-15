@@ -267,6 +267,12 @@ export function makePetRoutes(deps: { service: PetService }): WebRoute[] {
       if (typeof id !== 'string') return Promise.reject(new Error('invalid-id'))
       return service.deleteTheme(id)
     }),
+    postRoute(`${PET_API_PREFIX}/themes/background-delete`, (body) => {
+      const id = body.id
+      const name = body.name
+      if (typeof id !== 'string' || typeof name !== 'string') return Promise.reject(new Error('invalid-args'))
+      return service.deleteThemeBackground(id, name)
+    }),
   ]
 
   const uploadRoute: WebRoute = {

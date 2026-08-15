@@ -14,6 +14,7 @@ export interface ThemeEditModalProps {
   renameTheme: (id: string, name: string) => Promise<void>
   deleteTheme: (id: string) => Promise<void>
   uploadBackground: (id: string, name: string, data: Blob) => Promise<void>
+  deleteBackground: (id: string, name: string) => Promise<void>
   onClose: () => void
 }
 
@@ -22,7 +23,7 @@ export interface ThemeEditModalProps {
  * @param props - theme id and host callbacks.
  * @returns the modal element tree.
  */
-export function ThemeEditModal({ id, getConfig, renameTheme, deleteTheme, uploadBackground, onClose }: ThemeEditModalProps) {
+export function ThemeEditModal({ id, getConfig, renameTheme, deleteTheme, uploadBackground, deleteBackground, onClose }: ThemeEditModalProps) {
   const [config, setConfig] = useState<ThemeConfigView | null>(null)
   const [name, setName] = useState('')
   const [saving, setSaving] = useState(false)
@@ -58,6 +59,12 @@ export function ThemeEditModal({ id, getConfig, renameTheme, deleteTheme, upload
     deleteTheme(id).then(onClose, () => {})
   }
 
+  const onDeleteBackground = (src: string): void => {
+    const fileName = src.split('/').pop() ?? src
+    if (!window.confirm(`确定删除壁纸「${fileName}」吗？`)) return
+    deleteBackground(id, fileName).then(reload, () => {})
+  }
+
   return (
     <div className={css.overlay} role="dialog" aria-label="编辑桌面主题">
       <div className={css.panel}>
@@ -82,12 +89,15 @@ export function ThemeEditModal({ id, getConfig, renameTheme, deleteTheme, upload
               />
             </section>
 
-            {/* 主题照片上传（添加） */}
+            {/* 主题照片上传（添加/删除） */}
             <section className={css.field}>
-              <h4 className={css.label}>主题照片（添加）</h4>
+              <h4 className={css.label}>主题照片（添加/删除）</h4>
               <div className={css.thumbRow}>
                 {config.backgrounds.map(src => (
-                  <img key={src} className={css.thumb} src={src} alt="壁纸" />
+                  <div key={src} className={css.thumbItem}>
+                    <img className={css.thumb} src={src} alt="壁纸" />
+                    <button type="button" className={css.thumbDel} onClick={() => { onDeleteBackground(src) }} aria-label="删除壁纸">×</button>
+                  </div>
                 ))}
                 {config.backgrounds.length === 0 && <span className={css.emptyHint}>暂无照片，请添加</span>}
               </div>

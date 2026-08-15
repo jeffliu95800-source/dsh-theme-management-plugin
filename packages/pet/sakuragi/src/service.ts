@@ -438,6 +438,11 @@ export class PetService extends Service {
     return { ok: true }
   }
 
+  /** Delete one background image of a theme. */
+  async deleteThemeBackground(id: string, name: string): Promise<{ ok: boolean }> {
+    return { ok: deleteFile(themeBackgroundsDir(id), name) }
+  }
+
   display(): PetDisplayConfig {
     return { ...this.persist.display }
   }
