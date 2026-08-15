@@ -287,6 +287,11 @@ export class PetService extends Service {
     this.activeId = id
     this.character = pack
     setActivePetId(id)
+    // Auto-play the selected character's music: enable it when it has tracks.
+    if (!pack.music.enabled && listMusicFiles(id).length > 0) {
+      setPetMusicEnabledDir(id, true)
+      this.reloadCharacter()
+    }
     this.persist = { ...this.persist, name: pack.name }
     this.flush()
     this.syncSettingsFromPet()
