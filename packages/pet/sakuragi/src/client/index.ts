@@ -17,7 +17,7 @@ import type {} from '@deepseek-ai/dsh-client-ui-layout/client'
 import type {} from '@deepseek-ai/dsh-client-ui-settings/client'
 import { Pet, type PetInjected } from './Pet.tsx'
 import { PetSettingsRow, type PetSettingsInjected } from './SettingsRow.tsx'
-import { createPetStore, type PetStateView, type PetSummary, type ThemeSummary } from './pet-store.ts'
+import { createPetStore, type PetConfigView, type PetStateView, type PetSummary, type ThemeConfigView, type ThemeSummary } from './pet-store.ts'
 import { respond, type CharacterChat, type PetFacts } from './persona.ts'
 import { en, zh, type PetKey } from './locales.ts'
 
@@ -87,6 +87,13 @@ export function apply(ctx: ClientContext): void {
     petFetch<{ themes: ThemeSummary[] }>('/api/sakuragi/themes').then(r => { bound?.setThemes(r.themes) }, () => {})
   }
 
+  /** Same-origin binary upload (POST raw body to a query-parameter route). */
+  const petUpload = (path: string, data: Blob): Promise<void> => {
+    return fetch(path, { method: 'POST', body: data }).then(response => {
+      if (!response.ok) throw new Error(`sakuragi ${path} failed: ${response.status}`)
+    })
+  }
+
   const petInjected = (actions: BoundActions<typeof store>): PetInjected => {
     bound = actions
     pollNow()
@@ -122,15 +129,6 @@ export function apply(ctx: ClientContext): void {
       dragEnd: (right, bottom) => {
         petFetch('/api/sakuragi/set-config', { right, bottom }).then(() => { pollNow() }, () => {})
       },
-      upload: (kind, name, data) => {
-        fetch(`/api/sakuragi/upload?kind=${kind}&name=${encodeURIComponent(name)}`, {
-          method: 'POST',
-          body: data,
-        }).then(response => {
-          if (!response.ok) throw new Error(`upload failed: ${response.status}`)
-          pollNow()
-        }, () => {})
-      },
     }
   }
 
@@ -156,6 +154,27 @@ export function apply(ctx: ClientContext): void {
     activateTheme: (id: string) => {
       petFetch('/api/sakuragi/themes/activate', { id }).then(() => { refreshLists() }, () => {})
     },
+    getPetConfig: (id: string) => petFetch<PetConfigView>('/api/sakuragi/pets/config', { id }),
+    renamePet: (id: string, name: string) => petFetch('/api/sakuragi/pets/rename', { id, name })
+      .then(() => { refreshLists(); refreshCharacterChat(); pollNow() }),
+    updatePetQuotes: (id: string, quotes: { bubbles?: Record<string, string>; reactions?: Record<string, string> }) =>
+      petFetch('/api/sakuragi/pets/quotes', { id, quotes }).then(() => { refreshCharacterChat(); pollNow() }),
+    setPetMusicEnabled: (id: string, enabled: boolean) =>
+      petFetch('/api/sakuragi/pets/music-toggle', { id, enabled }).then(() => { pollNow() }),
+    deletePet: (id: string) => petFetch('/api/sakuragi/pets/delete', { id })
+      .then(() => { refreshLists(); refreshCharacterChat(); pollNow() }),
+    uploadPetAsset: (kind: 'pose' | 'music', id: string, name: string, data: Blob) =>
+      petUpload(`/api/sakuragi/upload?kind=${kind}&id=${encodeURIComponent(id)}&name=${encodeURIComponent(name)}`, data)
+        .then(() => { pollNow(); if (kind === 'pose') refreshCharacterChat() }),
+    deleteMusic: (id: string, name: string) =>
+      petFetch('/api/sakuragi/music/delete', { id, name }).then(() => { pollNow() }),
+    getThemeConfig: (id: string) => petFetch<ThemeConfigView>('/api/sakuragi/themes/config', { id }),
+    renameTheme: (id: string, name: string) => petFetch('/api/sakuragi/themes/rename', { id, name })
+      .then(() => { refreshLists() }),
+    deleteTheme: (id: string) => petFetch('/api/sakuragi/themes/delete', { id })
+      .then(() => { refreshLists() }),
+    uploadThemeBackground: (id: string, name: string, data: Blob) =>
+      petUpload(`/api/sakuragi/upload?kind=background&id=${encodeURIComponent(id)}&name=${encodeURIComponent(name)}`, data),
     }
   }
 

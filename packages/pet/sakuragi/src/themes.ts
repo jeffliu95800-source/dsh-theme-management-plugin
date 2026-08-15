@@ -7,7 +7,7 @@
  * @module @deepseek-ai/dsh-sakuragi/themes
  */
 
-import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { petHomeDir } from './persist.ts'
 
@@ -92,12 +92,29 @@ export function listThemeBackgrounds(id: string): string[] {
 
 /** Create a new theme from a name; returns its id. */
 export function createTheme(name: string): string {
-  const slug = (name.replace(/[^a-zA-Z0-9_-]/g, '_').toLowerCase() || 'theme').slice(0, 24)
+  const slug = (name.replace(/[^a-zA-Z0-9_-]/g, '_').toLowerCase().replace(/_+/g, '_').replace(/^_+|_+$/g, '') || 'theme').slice(0, 24)
   const id = `${slug}-${Date.now()}`
   const dir = join(themesRoot(), id)
   mkdirSync(join(dir, 'backgrounds'), { recursive: true })
   writeFileSync(join(dir, 'theme.json'), JSON.stringify({ id, name: name.trim() || '新主题', nameEn: 'New Theme' }, null, 2))
   return id
+}
+
+/** Rename a theme (display name shown in the settings list). */
+export function renameTheme(id: string, name: string): void {
+  const dir = join(themesRoot(), id)
+  const raw = JSON.parse(readFileSync(join(dir, 'theme.json'), 'utf8')) as Record<string, unknown>
+  writeFileSync(join(dir, 'theme.json'), JSON.stringify({ ...raw, name: name.trim() }, null, 2))
+}
+
+/** Delete a theme; when it was active the selection falls back to the built-in. */
+export function deleteTheme(id: string): void {
+  const wasActive = activeThemeId() === id
+  rmSync(join(themesRoot(), id), { recursive: true, force: true })
+  if (wasActive) {
+    seedBuiltinTheme()
+    setActiveThemeId(BUILTIN_THEME_ID)
+  }
 }
 
 /** List all themes with active flag (settings surface). */

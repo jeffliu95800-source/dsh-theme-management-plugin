@@ -21,8 +21,6 @@ export interface PetInjected {
   feedbackDone: () => void
   /** Persist a finished drag as viewport right/bottom insets (px). */
   dragEnd: (right: number, bottom: number) => void
-  /** Upload a skin asset (background image or character pose). */
-  upload: (kind: 'background' | 'pose', name: string, data: Blob) => void
 }
 
 /** Full component props: runtime + store + locale seats and the injected face. */
@@ -57,13 +55,12 @@ function poseIndexNow(count: number): number {
  * @param props - composed slot props.
  * @returns the pet element tree.
  */
-export function Pet({ useStore, t, pet, pass, hide, summon, send, clear, feedbackDone, dragEnd, upload }: PetProps) {
+export function Pet({ useStore, t, pet, pass, hide, summon, send, clear, feedbackDone, dragEnd }: PetProps) {
   const snapshot = useStore(s => s.snapshot)
   const feedback = useStore(s => s.feedback)
   const messages = useStore(s => s.messages)
   const [chatOpen, setChatOpen] = useState(false)
   const [tilt, setTilt] = useState({ x: 0, y: 0 })
-  const fileRef = useRef<HTMLInputElement | null>(null)
   const [dragging, setDragging] = useState(false)
   const [poseIndex, setPoseIndex] = useState(() => poseIndexNow(1))
   const [pos, setPos] = useState(() => ({
@@ -72,6 +69,7 @@ export function Pet({ useStore, t, pet, pass, hide, summon, send, clear, feedbac
   }))
 
   const petRef = useRef<HTMLDivElement | null>(null)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
   const initializedRef = useRef(false)
   const sizeRef = useRef(180)
   const poseCountRef = useRef(1)
@@ -128,6 +126,18 @@ export function Pet({ useStore, t, pet, pass, hide, summon, send, clear, feedbac
     })
   }, [snapshot])
 
+  // Background music: play the first enabled track; restart on track change.
+  // Autoplay may be blocked until the user interacts with the page.
+  const musicSrc = snapshot !== null && snapshot.music.enabled && snapshot.music.files.length > 0
+    ? snapshot.music.files[0]
+    : undefined
+  useEffect(() => {
+    const el = audioRef.current
+    if (el === null || musicSrc === undefined) return
+    const attempt = el.play()
+    attempt?.catch(() => { /* blocked until a user gesture; retried on next change */ })
+  }, [musicSrc])
+
   const onPointerDown = (e: React.PointerEvent<HTMLDivElement>): void => {
     dragRef.current = { active: true, startX: e.clientX, startY: e.clientY, posX: pos.x, posY: pos.y, moved: false }
     setDragging(true)
@@ -161,15 +171,6 @@ export function Pet({ useStore, t, pet, pass, hide, summon, send, clear, feedbac
     }
   }
 
-  const onUploadChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
-    const file = e.target.files?.[0]
-    e.target.value = ''
-    if (file === undefined) return
-    // Heuristic: .svg → character pose; other images → background.
-    const kind = file.name.toLowerCase().endsWith('.svg') ? 'pose' : 'background'
-    upload(kind, file.name, file)
-  }
-
   if (snapshot === null) return null
 
   if (!snapshot.display.visible) {
@@ -191,6 +192,7 @@ export function Pet({ useStore, t, pet, pass, hide, summon, send, clear, feedbac
       style={{ left: pos.x, top: pos.y }}
       data-dragging={dragging || undefined}
     >
+      {musicSrc !== undefined && <audio ref={audioRef} src={musicSrc} loop />}
       {line !== undefined && (
         <div className={css.bubble} onClick={feedbackDone}>{line}</div>
       )}
@@ -219,10 +221,8 @@ export function Pet({ useStore, t, pet, pass, hide, summon, send, clear, feedbac
         <button type="button" className={css.action} onClick={pet}>摸头</button>
         <button type="button" className={css.action} onClick={pass}>传球</button>
         <button type="button" className={css.action} onClick={() => { setChatOpen(o => !o) }}>聊</button>
-        <button type="button" className={css.action} onClick={() => { fileRef.current?.click() }}>上传</button>
         <button type="button" className={css.action} onClick={hide}>隐藏</button>
       </div>
-      <input ref={fileRef} type="file" accept="image/*,.svg" style={{ display: 'none' }} onChange={onUploadChange} />
       {chatOpen && (
         <ChatPopup
           messages={messages}

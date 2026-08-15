@@ -12,8 +12,37 @@ import { Context, Service } from '@deepseek-ai/cordis'
 import type { Session, SessionEvent } from '@deepseek-ai/dsh-session'
 import { join } from 'node:path'
 import type { CharacterPack } from './character.ts'
-import { activePetId, createPet as createPetDir, listPets, loadPet, petsRoot, seedBuiltinPet, setActivePetId, type PetSummary } from './pets.ts'
-import { activeThemeId, createTheme as createThemeDir, listThemeBackgrounds, listThemeIds, listThemes, seedBuiltinTheme, setActiveThemeId, themeBackgroundsDir, type ThemeSummary } from './themes.ts'
+import {
+  activePetId,
+  createPet as createPetDir,
+  deletePet as deletePetDir,
+  listMusicFiles,
+  listPetIds,
+  listPets,
+  loadPet,
+  petsRoot,
+  renamePet as renamePetDir,
+  seedBuiltinPet,
+  setActivePetId,
+  setPetMusicEnabled as setPetMusicEnabledDir,
+  updatePetQuotes as updatePetQuotesDir,
+  BUILTIN_PET_ID,
+  type PetSummary,
+} from './pets.ts'
+import {
+  activeThemeId,
+  createTheme as createThemeDir,
+  deleteTheme as deleteThemeDir,
+  listThemeBackgrounds,
+  listThemeIds,
+  listThemes,
+  renameTheme as renameThemeDir,
+  seedBuiltinTheme,
+  setActiveThemeId,
+  themeBackgroundsDir,
+  themeName,
+  type ThemeSummary,
+} from './themes.ts'
 import {
   applyInteraction,
   applyTurnReward,
@@ -34,6 +63,7 @@ import {
   type PetDisplayConfig,
   type PetPersist,
 } from './persist.ts'
+import { deleteFile } from './upload.ts'
 
 /** The pet's working-phase vocabulary, derived from core session events. */
 export type ActivityPhase = 'idle' | 'waiting' | 'thinking' | 'tool' | 'done'
@@ -79,6 +109,37 @@ export interface PetStateView {
   name: string
   /** Pose SVG filenames served under /sakuragi/poses/ (for pose rotation). */
   poses: string[]
+  /** Background music served under /sakuragi/pets/<id>/music/. */
+  music: { enabled: boolean; files: string[] }
+}
+
+/** One pet's editable config returned to the edit modal. */
+export interface PetConfigView {
+  id: string
+  name: string
+  /** Phase → bubble line (non-interaction quotes). */
+  bubbles: Record<string, string>
+  /** Interaction reactions (button-click quotes). */
+  reactions: { pet: string; petCooldown: string; pass: string; passCooldown: string }
+  fallback: string[]
+  /** Pose image URL paths. */
+  poses: string[]
+  /** Background-music state and file URL paths. */
+  music: { enabled: boolean; files: string[] }
+}
+
+/** Quote replacement patch (both fields optional; missing fields stay). */
+export interface PetQuotesPatch {
+  bubbles?: Record<string, string>
+  reactions?: Record<string, string>
+}
+
+/** One theme's editable config returned to the edit modal. */
+export interface ThemeConfigView {
+  id: string
+  name: string
+  /** Background image URL paths. */
+  backgrounds: string[]
 }
 
 /** Result of an interaction. */
@@ -145,6 +206,7 @@ export class PetService extends Service {
   private readonly machine: PetStateMachine
   private readonly affinityConfig: AffinityConfig
   private readonly persistDir: string
+  private readonly packageRoot: string
   private activeId: string
   private character: CharacterPack
   private persist: PetPersist
@@ -154,6 +216,7 @@ export class PetService extends Service {
 
   constructor(ctx: Context, config: PetConfig) {
     super(ctx, 'sakuragi')
+    this.packageRoot = config.packageRoot
     seedBuiltinPet(config.packageRoot)
     seedBuiltinTheme()
     this.activeId = activePetId()
@@ -246,6 +309,110 @@ export class PetService extends Service {
     return themeBackgroundsDir(activeThemeId())
   }
 
+  /** Active pet's background-music directory (upload target). */
+  petMusicDir(): string {
+    return join(petsRoot(), this.activeId, 'music')
+  }
+
+  /** Music URL paths of the active pet. */
+  musicFiles(): string[] {
+    return listMusicFiles(this.activeId).map(file => `/sakuragi/pets/${this.activeId}/music/${file}`)
+  }
+
+  /** Editable config of one pet for the edit modal. */
+  async petConfig(id: string): Promise<PetConfigView> {
+    const pack = loadPet(id)
+    return {
+      id,
+      name: pack.name,
+      bubbles: pack.bubbles,
+      reactions: pack.reactions,
+      fallback: pack.fallback,
+      poses: pack.poses.map(file => `/sakuragi/pets/${id}/poses/${file}`),
+      music: {
+        enabled: pack.music.enabled,
+        files: listMusicFiles(id).map(file => `/sakuragi/pets/${id}/music/${file}`),
+      },
+    }
+  }
+
+  /** Rename a pet (persona name shown in lists and on the floating pet). */
+  async renamePet(id: string, name: string): Promise<{ ok: true; name: string } | { ok: false; error: string }> {
+    const trimmed = name.trim()
+    if (trimmed === '') return { ok: false, error: 'name-empty' }
+    if (trimmed.length > PET_NAME_MAX_LENGTH) return { ok: false, error: 'name-too-long' }
+    renamePetDir(id, trimmed)
+    if (this.activeId === id) {
+      this.reloadCharacter()
+      this.persist = { ...this.persist, name: trimmed }
+      this.flush()
+      this.syncSettingsFromPet()
+    }
+    return { ok: true, name: trimmed }
+  }
+
+  /** Replace one pet's phase bubbles and/or interaction reactions. */
+  async updatePetQuotes(id: string, quotes: PetQuotesPatch): Promise<{ ok: true }> {
+    updatePetQuotesDir(id, quotes)
+    if (this.activeId === id) this.reloadCharacter()
+    return { ok: true }
+  }
+
+  /** Toggle one pet's background music. */
+  async setPetMusicEnabled(id: string, enabled: boolean): Promise<{ ok: true }> {
+    setPetMusicEnabledDir(id, enabled)
+    if (this.activeId === id) this.reloadCharacter()
+    return { ok: true }
+  }
+
+  /** Delete one music file of a pet. */
+  async deleteMusic(id: string, name: string): Promise<{ ok: boolean }> {
+    const ok = deleteFile(join(petsRoot(), id, 'music'), name)
+    if (this.activeId === id) this.reloadCharacter()
+    return { ok }
+  }
+
+  /** Delete a pet; the active selection falls back to the built-in. */
+  async deletePet(id: string): Promise<{ ok: true } | { ok: false; error: string }> {
+    if (!listPetIds().includes(id)) return { ok: false, error: 'unknown-pet' }
+    const wasActive = this.activeId === id
+    deletePetDir(id)
+    if (wasActive) {
+      this.activeId = BUILTIN_PET_ID
+      seedBuiltinPet(this.packageRoot)
+      this.character = loadPet(this.activeId)
+      this.persist = { ...this.persist, name: this.character.name }
+      this.flush()
+      this.syncSettingsFromPet()
+    }
+    return { ok: true }
+  }
+
+  /** Editable config of one theme for the edit modal. */
+  async themeConfig(id: string): Promise<ThemeConfigView> {
+    return {
+      id,
+      name: themeName(id),
+      backgrounds: listThemeBackgrounds(id).map(file => `/sakuragi/themes/${id}/backgrounds/${file}`),
+    }
+  }
+
+  /** Rename a theme. */
+  async renameTheme(id: string, name: string): Promise<{ ok: true; name: string } | { ok: false; error: string }> {
+    const trimmed = name.trim()
+    if (trimmed === '') return { ok: false, error: 'name-empty' }
+    if (trimmed.length > PET_NAME_MAX_LENGTH) return { ok: false, error: 'name-too-long' }
+    renameThemeDir(id, trimmed)
+    return { ok: true, name: trimmed }
+  }
+
+  /** Delete a theme; the active selection falls back to the built-in. */
+  async deleteTheme(id: string): Promise<{ ok: true } | { ok: false; error: string }> {
+    if (!listThemeIds().includes(id)) return { ok: false, error: 'unknown-theme' }
+    deleteThemeDir(id)
+    return { ok: true }
+  }
+
   display(): PetDisplayConfig {
     return { ...this.persist.display }
   }
@@ -311,6 +478,7 @@ export class PetService extends Service {
       display: { ...this.persist.display },
       name: this.persist.name,
       poses: this.poses(),
+      music: { enabled: this.character.music.enabled, files: this.musicFiles() },
     }
   }
 

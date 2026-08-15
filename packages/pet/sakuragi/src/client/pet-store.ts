@@ -27,6 +27,31 @@ export interface PetStateView {
   name: string
   /** Pose SVG filenames served under /sakuragi/poses/. */
   poses: string[]
+  /** Background music served under /sakuragi/pets/<id>/music/. */
+  music: { enabled: boolean; files: string[] }
+}
+
+/** One pet's editable config returned by the edit endpoint. */
+export interface PetConfigView {
+  id: string
+  name: string
+  /** Phase → bubble line (non-interaction quotes). */
+  bubbles: Record<string, string>
+  /** Interaction reactions (button-click quotes). */
+  reactions: { pet: string; petCooldown: string; pass: string; passCooldown: string }
+  fallback: string[]
+  /** Pose image URL paths. */
+  poses: string[]
+  /** Background-music state and file URL paths. */
+  music: { enabled: boolean; files: string[] }
+}
+
+/** One theme's editable config returned by the edit endpoint. */
+export interface ThemeConfigView {
+  id: string
+  name: string
+  /** Background image URL paths. */
+  backgrounds: string[]
 }
 
 /** One transient reaction bubble on the pet. */

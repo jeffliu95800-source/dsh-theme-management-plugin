@@ -47,10 +47,20 @@
   gap: 12px;
 }
 
+.rowActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+}
+
 .rowName {
   font-size: 13px;
   line-height: 20px;
   color: var(--dsw-alias-label-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .activeBtn {
@@ -68,6 +78,23 @@
 .activeBtn:disabled {
   opacity: 0.55;
   cursor: default;
+}
+
+.editBtn {
+  flex: none;
+  padding: 2px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--dsw-alias-border-l2);
+  background: transparent;
+  color: var(--dsw-alias-label-secondary);
+  font-size: 12px;
+  line-height: 20px;
+  cursor: pointer;
+}
+
+.editBtn:hover {
+  color: var(--dsw-alias-label-primary);
+  border-color: var(--dsw-alias-border-l3);
 }
 
 .switch,

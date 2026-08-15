@@ -15,7 +15,7 @@ import { makePetRoutes, petPackageRoot } from './routes.ts'
 import { DEFAULT_PET_NAME, DISPLAY_INSET_MAX, DISPLAY_SIZE_MAX, DISPLAY_SIZE_MIN, PET_NAME_MAX_LENGTH } from './persist.ts'
 
 export { PetService } from './service.ts'
-export type { PetConfig, PetStateView, PetInteractResult, PetSettingsSection, ActivityPhase } from './service.ts'
+export type { PetConfig, PetStateView, PetInteractResult, PetSettingsSection, ActivityPhase, PetConfigView, PetQuotesPatch, ThemeConfigView } from './service.ts'
 export { PetStateMachine } from './service.ts'
 export { AFFINITY_MAX, AFFINITY_RANKS, applyInteraction, applyTurnReward, emptyAffinity, rankOf } from './affinity.ts'
 export type { AffinityConfig, AffinityState, InteractionOutcome, PetInteraction } from './affinity.ts'

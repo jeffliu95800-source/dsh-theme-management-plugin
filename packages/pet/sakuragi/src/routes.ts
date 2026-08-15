@@ -11,11 +11,11 @@ import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import type { WebRoute } from '@deepseek-ai/dsh-host-webserver'
-import type { PetService } from './service.ts'
+import type { PetQuotesPatch, PetService } from './service.ts'
 import type { PetInteraction } from './affinity.ts'
 import { sanitizeName, saveFile } from './upload.ts'
-import { petsRoot } from './pets.ts'
-import { themesRoot } from './themes.ts'
+import { petsRoot, petPosesDir, petMusicDir } from './pets.ts'
+import { themesRoot, themeBackgroundsDir } from './themes.ts'
 
 /** Browser-facing base path of the pet API. */
 export const PET_API_PREFIX = '/api/sakuragi'
@@ -90,6 +90,11 @@ function contentTypeFor(name: string): string {
   if (n.endsWith('.jpg') || n.endsWith('.jpeg')) return 'image/jpeg'
   if (n.endsWith('.webp')) return 'image/webp'
   if (n.endsWith('.gif')) return 'image/gif'
+  if (n.endsWith('.mp3')) return 'audio/mpeg'
+  if (n.endsWith('.ogg')) return 'audio/ogg'
+  if (n.endsWith('.wav')) return 'audio/wav'
+  if (n.endsWith('.m4a') || n.endsWith('.aac')) return 'audio/mp4'
+  if (n.endsWith('.flac')) return 'audio/flac'
   return 'application/octet-stream'
 }
 
@@ -205,6 +210,56 @@ export function makePetRoutes(deps: { service: PetService }): WebRoute[] {
       if (typeof id !== 'string') return Promise.reject(new Error('invalid-id'))
       return service.activateTheme(id)
     }),
+    postRoute(`${PET_API_PREFIX}/pets/config`, (body) => {
+      const id = body.id
+      if (typeof id !== 'string') return Promise.reject(new Error('invalid-id'))
+      return service.petConfig(id)
+    }),
+    postRoute(`${PET_API_PREFIX}/pets/rename`, (body) => {
+      const id = body.id
+      const name = body.name
+      if (typeof id !== 'string' || typeof name !== 'string') return Promise.reject(new Error('invalid-args'))
+      return service.renamePet(id, name)
+    }),
+    postRoute(`${PET_API_PREFIX}/pets/quotes`, (body) => {
+      const id = body.id
+      const quotes = body.quotes
+      if (typeof id !== 'string' || typeof quotes !== 'object' || quotes === null) return Promise.reject(new Error('invalid-args'))
+      return service.updatePetQuotes(id, quotes as PetQuotesPatch)
+    }),
+    postRoute(`${PET_API_PREFIX}/pets/music-toggle`, (body) => {
+      const id = body.id
+      const enabled = body.enabled
+      if (typeof id !== 'string' || typeof enabled !== 'boolean') return Promise.reject(new Error('invalid-args'))
+      return service.setPetMusicEnabled(id, enabled)
+    }),
+    postRoute(`${PET_API_PREFIX}/pets/delete`, (body) => {
+      const id = body.id
+      if (typeof id !== 'string') return Promise.reject(new Error('invalid-id'))
+      return service.deletePet(id)
+    }),
+    postRoute(`${PET_API_PREFIX}/music/delete`, (body) => {
+      const id = body.id
+      const name = body.name
+      if (typeof id !== 'string' || typeof name !== 'string') return Promise.reject(new Error('invalid-args'))
+      return service.deleteMusic(id, name)
+    }),
+    postRoute(`${PET_API_PREFIX}/themes/config`, (body) => {
+      const id = body.id
+      if (typeof id !== 'string') return Promise.reject(new Error('invalid-id'))
+      return service.themeConfig(id)
+    }),
+    postRoute(`${PET_API_PREFIX}/themes/rename`, (body) => {
+      const id = body.id
+      const name = body.name
+      if (typeof id !== 'string' || typeof name !== 'string') return Promise.reject(new Error('invalid-args'))
+      return service.renameTheme(id, name)
+    }),
+    postRoute(`${PET_API_PREFIX}/themes/delete`, (body) => {
+      const id = body.id
+      if (typeof id !== 'string') return Promise.reject(new Error('invalid-id'))
+      return service.deleteTheme(id)
+    }),
   ]
 
   const uploadRoute: WebRoute = {
@@ -215,18 +270,26 @@ export function makePetRoutes(deps: { service: PetService }): WebRoute[] {
       const url = new URL(req.url ?? '/', 'http://x')
       const kind = url.searchParams.get('kind')
       const name = url.searchParams.get('name') ?? 'upload'
-      if (kind !== 'background' && kind !== 'pose') {
+      const id = url.searchParams.get('id')
+      if (kind !== 'background' && kind !== 'pose' && kind !== 'music') {
         json(res, 400, { ok: false, error: 'invalid-kind' })
         return
+      }
+      let dir: string
+      if (kind === 'pose') {
+        dir = id !== null ? petPosesDir(id) : service.petPosesDir()
+      } else if (kind === 'music') {
+        dir = id !== null ? petMusicDir(id) : service.petMusicDir()
+      } else {
+        dir = id !== null ? themeBackgroundsDir(id) : service.activeThemeBackgroundsDir()
       }
       readRawBody(req).then(body => {
         if (body.length === 0) {
           json(res, 400, { ok: false, error: 'empty-body' })
           return
         }
-        const dir = kind === 'background' ? service.activeThemeBackgroundsDir() : service.petPosesDir()
         const stored = saveFile(dir, name, body)
-        if (kind === 'pose') service.reloadCharacter()
+        if (kind === 'pose' && (id === null || id === service.petId())) service.reloadCharacter()
         json(res, 200, { ok: true, name: stored })
       }, error => {
         json(res, 400, { ok: false, error: error instanceof Error ? error.message : String(error) })

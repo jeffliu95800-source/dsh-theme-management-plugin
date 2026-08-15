@@ -22,6 +22,11 @@ export interface CharacterRank {
   emoji: string
 }
 
+/** Ambient background-music config for one pet (files live in music/). */
+export interface CharacterMusic {
+  enabled: boolean
+}
+
 /** Fully-typed character pack (character.json + auto-discovered poses). */
 export interface CharacterPack {
   id: string
@@ -36,15 +41,18 @@ export interface CharacterPack {
   fallback: string[]
   /** Regex source used to capture the user's name from an introduction. */
   namePattern: string
+  /** Background-music config (defaults to disabled when absent). */
+  music: CharacterMusic
   /** Pose SVG filenames, auto-discovered from assets/poses/. */
   poses: string[]
 }
 
 /** Load the character pack from a directory holding character.json + poses/. */
 export function loadCharacterPack(dir: string): CharacterPack {
-  const parsed = JSON.parse(readFileSync(join(dir, 'character.json'), 'utf8')) as Omit<CharacterPack, 'poses'>
+  const parsed = JSON.parse(readFileSync(join(dir, 'character.json'), 'utf8')) as
+    Omit<CharacterPack, 'poses' | 'music'> & { music?: Partial<CharacterMusic> | undefined }
   const poses = readdirSync(join(dir, 'poses'))
     .filter(file => file.endsWith('.svg'))
     .sort()
-  return { ...parsed, poses }
+  return { ...parsed, music: { enabled: parsed.music?.enabled ?? false }, poses }
 }

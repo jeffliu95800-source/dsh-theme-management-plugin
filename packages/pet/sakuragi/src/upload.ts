@@ -5,7 +5,7 @@
  * @module @deepseek-ai/dsh-sakuragi/upload
  */
 
-import { mkdirSync, readdirSync, writeFileSync } from 'node:fs'
+import { mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { petHomeDir } from './persist.ts'
 
@@ -32,6 +32,18 @@ export function saveFile(dir: string, name: string, data: Buffer): string {
   if (safe === '') throw new Error('empty-filename')
   writeFileSync(join(dir, safe), data)
   return safe
+}
+
+/** Delete one file from a directory by sanitized name; false when absent. */
+export function deleteFile(dir: string, name: string): boolean {
+  const safe = sanitizeName(name)
+  if (safe === '') return false
+  try {
+    rmSync(join(dir, safe), { force: true })
+    return true
+  } catch {
+    return false
+  }
 }
 
 /** List the filenames in a directory (sorted; empty when absent). */

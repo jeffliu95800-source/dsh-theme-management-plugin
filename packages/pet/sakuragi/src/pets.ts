@@ -7,7 +7,7 @@
  * @module @deepseek-ai/dsh-sakuragi/pets
  */
 
-import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { loadCharacterPack, type CharacterPack } from './character.ts'
 import { petHomeDir } from './persist.ts'
@@ -68,6 +68,66 @@ export function loadPet(id: string): CharacterPack {
   return loadCharacterPack(join(petsRoot(), id))
 }
 
+/** One pet's poses directory (pose upload target). */
+export function petPosesDir(id: string): string {
+  return join(petsRoot(), id, 'poses')
+}
+
+/** One pet's background-music directory. */
+export function petMusicDir(id: string): string {
+  return join(petsRoot(), id, 'music')
+}
+
+/** Background-music filenames for one pet (sorted; empty when absent). */
+export function listMusicFiles(id: string): string[] {
+  try {
+    return readdirSync(petMusicDir(id)).sort()
+  } catch {
+    return []
+  }
+}
+
+/** Rewrite a pet's character.json, preserving unknown fields. */
+function writePetJson(id: string, next: Record<string, unknown>): void {
+  writeFileSync(join(petsRoot(), id, 'character.json'), JSON.stringify(next, null, 2))
+}
+
+/** Read a pet's character.json as a mutable record. */
+function readPetJson(id: string): Record<string, unknown> {
+  return JSON.parse(readFileSync(join(petsRoot(), id, 'character.json'), 'utf8')) as Record<string, unknown>
+}
+
+/** Rename a pet (persona name shown in lists and on the floating pet). */
+export function renamePet(id: string, name: string): void {
+  writePetJson(id, { ...readPetJson(id), name: name.trim() })
+}
+
+/** Replace a pet's phase bubbles and/or interaction reactions. */
+export function updatePetQuotes(
+  id: string,
+  patch: { bubbles?: Record<string, string>; reactions?: Record<string, string> },
+): void {
+  const raw = readPetJson(id)
+  const next = { ...raw }
+  if (patch.bubbles !== undefined) next.bubbles = { ...(raw.bubbles as Record<string, string> ?? {}), ...patch.bubbles }
+  if (patch.reactions !== undefined) next.reactions = { ...(raw.reactions as Record<string, string> ?? {}), ...patch.reactions }
+  writePetJson(id, next)
+}
+
+/** Set whether a pet's background music is enabled. */
+export function setPetMusicEnabled(id: string, enabled: boolean): void {
+  const raw = readPetJson(id)
+  const music = raw.music as { enabled?: boolean } | undefined
+  writePetJson(id, { ...raw, music: { ...(music ?? {}), enabled } })
+}
+
+/** Delete a pet directory; when it was active the selection falls back to the built-in. */
+export function deletePet(id: string): void {
+  const wasActive = activePetId() === id
+  rmSync(join(petsRoot(), id), { recursive: true, force: true })
+  if (wasActive) setActivePetId(BUILTIN_PET_ID)
+}
+
 /** The currently active pet id (defaults to the built-in). */
 export function activePetId(): string {
   try {
@@ -87,7 +147,7 @@ export function setActivePetId(id: string): void {
 
 /** Create a new pet from a persona name; returns its id. */
 export function createPet(name: string): string {
-  const slug = (name.replace(/[^a-zA-Z0-9_-]/g, '_').toLowerCase() || 'pet').slice(0, 24)
+  const slug = (name.replace(/[^a-zA-Z0-9_-]/g, '_').toLowerCase().replace(/_+/g, '_').replace(/^_+|_+$/g, '') || 'pet').slice(0, 24)
   const id = `${slug}-${Date.now()}`
   const dir = join(petsRoot(), id)
   mkdirSync(join(dir, 'poses'), { recursive: true })
@@ -101,6 +161,7 @@ export function createPet(name: string): string {
     chat: [],
     fallback: ['……'],
     namePattern: '.*',
+    music: { enabled: false },
   }
   writeFileSync(join(dir, 'character.json'), JSON.stringify(pack, null, 2))
   return id
