@@ -7,6 +7,17 @@ description: DeepSeek Harness Web GUI 的主题与桌面宠物管理插件：多
 
 DSH Web GUI 的**主题 + 桌面宠物管理插件**。把「壁纸主题」和「卡通人物」都做成可管理的资源：多主题/多宠物、列表、新建、切换、**编辑弹窗**。**同一时刻只激活一个主题、只显示一个宠物**，切换即替换。
 
+## 素材转矢量（model 照片 → SVG，长期生效约定）
+
+> 用户约定：**以后放进 `model/`（或 `img/`）里的照片，都要主动检查是否是 SVG 格式；如果不是，主动询问用户是否帮忙转换**，不要默默跳过或直接改。
+
+- 转换工具（纯 Pillow，无外部依赖）：
+  - `scripts/vectorize.py` — 背景抠除（边界 flood-fill）+ 中位切分量化 + marching-squares 轮廓追踪 → 透明底扁平色矢量 SVG（`python3 scripts/vectorize.py <输出目录>`，内置四视图：前/侧/后/俯）。
+  - `scripts/compose-3d.py` — 把前/侧/后/俯四张视图合成一张「立体形象」转盘图（正面最大在前，其余环绕 + 地面阴影 + 视图标签）。
+- 使用姿势：源照片放 `~/Downloads/凡人照片/`（示例），转换后输出到 `dsh theme/<角色>/model/`，插件实时列出（无需重启）。
+- 已完成的示例：`dsh theme/凡人修仙传/model/` 里有 `front/side/back/top.svg` + `韩立-立体.svg`。
+- 效果说明：自动追踪得到的是「透明底 + 扁平色块」的矢量轮廓（与樱木的干净卡通有差距），如需更精致的卡通风格需人工重绘；追踪参数在 `vectorize.py` 顶部（COLORS/MIN_AREA/EPS/TRACE_SCALE）。
+
 ## 数据模型
 
 所有资源存 `~/.dsh/slamdunk/`，纯目录即数据、零数据库：
