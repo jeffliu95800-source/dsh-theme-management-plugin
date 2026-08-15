@@ -11,7 +11,7 @@
  * The built-in "default" theme is seeded empty — the AppFrame falls back to
  * the bundled wallpapers when the active theme has no backgrounds. Switching
  * = pick another id.
- * @module @deepseek-ai/dsh-sakuragi/themes
+ * @module @jeffliu95800/dsh-sakuragi/themes
  */
 
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs'

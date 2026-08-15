@@ -12,7 +12,7 @@
  * The bundled Sakuragi is seeded on first run, so every pet — built-in or
  * user-created — is a plain editable directory and the active one is just a
  * persisted selection. Swapping = pick another id.
- * @module @deepseek-ai/dsh-sakuragi/pets
+ * @module @jeffliu95800/dsh-sakuragi/pets
  */
 
 import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs'

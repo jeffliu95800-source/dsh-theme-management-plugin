@@ -4,7 +4,7 @@
  * and ball-passes all earn points. Reaction copy and ranks come from the
  * character pack (data), never hardcoded here. Persistence lives in the
  * service; this module only computes transitions.
- * @module @deepseek-ai/dsh-sakuragi/affinity
+ * @module @jeffliu95800/dsh-sakuragi/affinity
  */
 
 import type { CharacterRank } from './character.ts'

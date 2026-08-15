@@ -3,7 +3,7 @@
  * (`/api/sakuragi/*`) for state, interactions, pet/theme management and file
  * upload, plus static serving of pet poses and theme backgrounds from the
  * per-directory stores under $DSH_HOME/slamdunk/.
- * @module @deepseek-ai/dsh-sakuragi/routes
+ * @module @jeffliu95800/dsh-sakuragi/routes
  */
 
 import type { IncomingMessage, ServerResponse } from 'node:http'

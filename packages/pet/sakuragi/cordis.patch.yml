@@ -3,4 +3,4 @@
 # browser side (modules node half scans dsh.client packages into the roster).
 - insert:
     - id: sakuragi-pet
-      name: '@deepseek-ai/dsh-sakuragi'
+      name: '@jeffliu95800/dsh-sakuragi'

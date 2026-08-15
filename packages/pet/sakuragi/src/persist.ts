@@ -2,7 +2,7 @@
  * Persistence for the Sakuragi pet: display config, affinity, and name, written
  * as JSON under $DSH_HOME (defaults to ~/.dsh). Missing or corrupt files fall
  * back to defaults; writes are atomic (temp + rename).
- * @module @deepseek-ai/dsh-sakuragi/persist
+ * @module @jeffliu95800/dsh-sakuragi/persist
  */
 
 import { mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs'

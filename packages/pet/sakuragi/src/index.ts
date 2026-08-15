@@ -3,7 +3,7 @@
  * browser half (`./client`) renders the character and drives it through the
  * same-origin `/api/sakuragi/*` JSON endpoints plus the `/sakuragi/<pose>.png`
  * media routes.
- * @module @deepseek-ai/dsh-sakuragi
+ * @module @jeffliu95800/dsh-sakuragi
  */
 
 import { Context } from '@deepseek-ai/cordis'

@@ -2,7 +2,7 @@
  * Upload helpers: generic file save/list under $DSH_HOME/slamdunk/. Backgrounds
  * live in one shared dir; pose images live in each pet's own directory (the
  * active pet's dir, managed by pets.ts).
- * @module @deepseek-ai/dsh-sakuragi/upload
+ * @module @jeffliu95800/dsh-sakuragi/upload
  */
 
 import { mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs'

@@ -1,13 +1,13 @@
 /**
- * Package-owned invariant companion for `@deepseek-ai/dsh-sakuragi`.
- * @module @deepseek-ai/dsh-sakuragi/invariant
+ * Package-owned invariant companion for `@jeffliu95800/dsh-sakuragi`.
+ * @module @jeffliu95800/dsh-sakuragi/invariant
  */
 
 /* jscpd:ignore-start */
 import type { Context } from '@deepseek-ai/cordis'
 import type { InvariantInstaller } from '@deepseek-ai/dsh-invariants'
 
-const PACKAGE_NAME = '@deepseek-ai/dsh-sakuragi'
+const PACKAGE_NAME = '@jeffliu95800/dsh-sakuragi'
 
 /** Cordis companion plugin name. */
 export const name = 'sakuragi-invariant'

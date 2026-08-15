@@ -3,7 +3,7 @@
  * defines a desktop-pet persona. Swapping characters = swapping this pack —
  * no code changes. The host loads it at boot and the browser half consumes it
  * through the state snapshot + `/sakuragi/character.json`.
- * @module @deepseek-ai/dsh-sakuragi/character
+ * @module @jeffliu95800/dsh-sakuragi/character
  */
 
 import { readFileSync, readdirSync } from 'node:fs'

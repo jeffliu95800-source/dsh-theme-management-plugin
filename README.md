@@ -8,8 +8,8 @@ DeepSeek Harness Web GUI 的**主题与桌面宠物管理插件**：把「壁纸
 
 | 功能 | 说明 |
 |---|---|
-| 桌面主题 | 多主题（壁纸轮播 + 三栏透明磨砂 + 80% 磨砂控件），新建/切换，编辑弹窗：**主题名称（改动）**、**主题照片上传（添加）**、**删除主题** |
-| 桌面宠物 | 多宠物（SVG 矢量角色，每小时换造型），新建/切换/开关/删除，编辑弹窗：**人物名称（替换）**、**人物形象上传（替换）**、**非互动状态语录（替换）**、**点按钮互动状态语录（替换）**、**背景音乐（开启/关闭/上传/删除）** |
+| 桌面主题 | 多主题（壁纸轮播 + 三栏透明磨砂 + 磨砂控件），新建/切换，编辑弹窗：**主题名称（改动）**、**主题照片上传（添加）**、**逐张删除壁纸**、**删除主题** |
+| 桌面宠物 | 多宠物（SVG 矢量角色，每小时换造型），新建/切换/开关/删除，编辑弹窗：**人物名称（替换）**、**人物形象上传（替换）/ 逐张删除**、**非互动状态语录（替换）**、**点按钮互动状态语录（替换）**、**背景音乐（开启/关闭/上传/删除）** |
 | 互动按钮 | 宠物本体只保留 3 个互动按钮（摸头 / 传球 / 聊）+ 1 个隐藏按钮；上传入口全部收进设置里的编辑弹窗 |
 
 ## 素材库模式（materialRoot）
@@ -38,9 +38,9 @@ dsh theme/
 ## 目录结构
 
 ```
-packages/pet/sakuragi/   # 双半区插件包 @deepseek-ai/dsh-sakuragi（host 状态机 + 路由 + browser UI）
+packages/pet/sakuragi/   # 双半区插件包 @jeffliu95800/dsh-sakuragi（host 状态机 + 路由 + browser UI）
 assets/                  # 内置樱木花道角色包（character.json + poses/*.svg）
-scripts/svg-transparent.mjs   # SVG 透明背景抠图脚本
+scripts/                  # SVG/图片处理脚本（详见 SKILL.md）：svg-transparent.mjs / vectorize.py / raster_svg.py / tighten_svg.py / compose-3d.py
 SKILL.md                 # 完整操作手册
 ```
 
@@ -50,14 +50,16 @@ SKILL.md                 # 完整操作手册
 # 1. 把 packages/pet/sakuragi 放进 deepseek-harness 源码仓库
 # 2. 构建
 pnpm exec tsc -b packages/pet/sakuragi
-pnpm --filter @deepseek-ai/dsh-sakuragi run bundle
+pnpm --filter @jeffliu95800/dsh-sakuragi run bundle
+# 2.5 打包成 .tgz（供分发/即插即用）
+cd packages/pet/sakuragi && pnpm pack --pack-destination /tmp
 # 3. 安装为 profile 插件
 pnpm dsh plugin --profile web add link:<checkout>/packages/pet/sakuragi
 # 4. 重启
 pnpm dsh web
 ```
 
-完整说明见 [SKILL.md](./SKILL.md)。
+完整说明见 [SKILL.md](./SKILL.md)；**即插即用使用文档**（安装步骤、图片/音视频规范、验证清单）见 [USAGE.md](./USAGE.md)。
 
 ## License
 

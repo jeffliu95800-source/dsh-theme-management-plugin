@@ -58,11 +58,11 @@ DSH Web GUI 的**主题 + 桌面宠物管理插件**。把「壁纸主题」和�
 
 ## 包结构（双半区，`dsh plugin add` 安装）
 
-`packages/pet/sakuragi/`（`@deepseek-ai/dsh-sakuragi`）——一个包同时含 host 半区 + browser 半区：
+`packages/pet/sakuragi/`（`@jeffliu95800/dsh-sakuragi`）——一个包同时含 host 半区 + browser 半区：
 
 - host：`service.ts`（状态机 + 多宠物/多主题激活 + 亲密度 + 持久化 + 宠物/主题配置读写）、`pets.ts` / `themes.ts` / `character.ts` / `upload.ts`（目录管理 + 角色包加载 + 文件上传/删除）、`routes.ts`（同源 HTTP API + 静态服务）、`index.ts`（apply，inject `['webServer']`）。
 - browser：`src/client/`（`index.ts` 轮询 + 注册 `shell.overlay` 与 `settings.general.item`；`Pet.tsx` 渲染 + 拖拽 + 3D 倾斜 + 聊天 + 音乐；`SettingsRow.tsx` 皮肤管理面板；`PetEditModal.tsx` / `ThemeEditModal.tsx` 编辑弹窗）。
-- `cordis.patch.yml`（`- insert: - id: sakuragi-pet, name: '@deepseek-ai/dsh-sakuragi'`）+ `package.json` 的 `dsh.bundle.patch` + `dsh.client`。
+- `cordis.patch.yml`（`- insert: - id: sakuragi-pet, name: '@jeffliu95800/dsh-sakuragi'`）+ `package.json` 的 `dsh.bundle.patch` + `dsh.client`。
 
 ## API
 
@@ -79,6 +79,8 @@ DSH Web GUI 的**主题 + 桌面宠物管理插件**。把「壁纸主题」和�
 | `POST /api/sakuragi/pets/music-toggle` | 背景音乐开关（`{ id, enabled }`） |
 | `POST /api/sakuragi/pets/delete` / `themes/delete` | 删除（`{ id }`；删激活项自动回退内置） |
 | `POST /api/sakuragi/music/delete` | 删除宠物的一首音乐（`{ id, name }`） |
+| `POST /api/sakuragi/pets/pose-delete` | 删除宠物的一张姿势图（`{ id, name }`；soft-delete，文件名进 character.json 的 `deletedPoses`，文件留盘） |
+| `POST /api/sakuragi/themes/background-delete` | 删除主题的一张背景（`{ id, name }`；soft-delete，文件名进 theme.json 的 `deletedBackgrounds`） |
 | `POST /api/sakuragi/upload?kind=background\|pose\|music&id=...&name=...` | 上传（raw body）：背景→主题 `img/`（素材库）/`backgrounds/`（legacy），姿势→宠物 `model/`/`poses/`，音乐→宠物 `music/` |
 | `GET /api/sakuragi/backgrounds` | 激活主题的背景 URL 列表（空则回退内置壁纸） |
 | `GET /sakuragi/pets/<id>/...` / `themes/<id>/...` | 静态服务（前缀路由，逐段 sanitize 防穿越） |
@@ -88,7 +90,7 @@ DSH Web GUI 的**主题 + 桌面宠物管理插件**。把「壁纸主题」和�
 
 ```sh
 pnpm exec tsc -b packages/pet/sakuragi                      # 类型检查
-pnpm --filter @deepseek-ai/dsh-sakuragi run bundle          # tsdown → lib/index.js + lib/client.js
+pnpm --filter @jeffliu95800/dsh-sakuragi run bundle          # tsdown → lib/index.js + lib/client.js
 pnpm dsh plugin --profile web add link:<checkout>/packages/pet/sakuragi   # 本地安装
 # 发布 npm 后：dsh plugin --profile web add <npm 包名>
 ```
@@ -97,14 +99,14 @@ pnpm dsh plugin --profile web add link:<checkout>/packages/pet/sakuragi   # 本�
 
 ## 编辑弹窗（设置 → 通用设置）
 
-- **桌面宠物 → 每个宠物行「编辑」**：人物名称（替换）、人物形象上传（只能上传替换，`image/*,.svg`）、非互动状态语录（bubbles 5 个阶段）、点按钮互动状态语录（reactions 4 条）、背景音乐（开启/关闭/上传/删除，`audio/*`）、删除卡通人物。文本字段点「保存」统一写入；上传/开关/删除即时生效。
-- **桌面主题 → 每个主题行「编辑」**：主题名称（改动）、主题照片上传（添加，`image/*`）、删除主题。
+- **桌面宠物 → 每个宠物行「编辑」**：人物名称（替换）、人物形象上传（替换，`image/*,.svg`）、逐张删除形象（soft-delete，文件留盘）、非互动状态语录（bubbles 5 个阶段）、点按钮互动状态语录（reactions 4 条）、背景音乐（开启/关闭/上传/删除，`audio/*`）、删除卡通人物。文本字段点「保存」统一写入；上传/开关/删除即时生效。
+- **桌面主题 → 每个主题行「编辑」**：主题名称（改动）、主题照片上传（添加，`image/*`）、逐张删除壁纸（soft-delete）、删除主题。
 - 宠物本体互动按钮固定为 3 个（摸头/传球/聊）+ 1 个隐藏；上传入口已从宠物上移除，全部收敛到编辑弹窗。
-- 音乐播放：激活宠物 `music.enabled` 且存在音乐文件时，浏览器 `<audio loop>` 播放第一首；受浏览器自动播放策略限制，需页面有过一次用户交互后才会出声。
+- 音乐播放：激活宠物 `music.enabled` 且存在音乐文件时，浏览器 `<audio loop>` 播放整个列表（一首结束自动切下一首，循环）；受浏览器自动播放策略限制，需页面有过一次用户交互后才会出声。
 
 ## 主题表面改动（透明 + 磨砂 + 视频壁纸，一次性）
 
-插件本体管"数据"（壁纸/人物），而"表面透明 + 80% 磨砂"是 `packages/client/*` 的 CSS/TSX 改动（见旧版 `dsh-slamdunk-skin` skill 第 1 节），改动后需打包对应 client 包。核心模式：`background: transparent` 露出壁纸；控件背景用实色 token（不透明度 100%），与按钮框/气泡/新会话框/输入框保持一致。
+插件本体管"数据"（壁纸/人物），而"表面透明 + 80% 磨砂"是 `packages/client/*` 的 CSS/TSX 改动（见旧版 `dsh-slamdunk-skin` skill 第 1 节），改动后需打包对应 client 包。核心模式：`background: transparent` 露出壁纸；控件背景用 `color-mix(in srgb, var(--token) N%, transparent)` 磨砂——按钮框/气泡/新会话框 20%、聊天弹窗 90%、输入框 10%，文字保持不透明。
 
 **视频壁纸**：把 `mp4/m4v/webm/ogv/mov` 直接放进主题的 `img/`（不能放子文件夹），AppFrame 会渲染成 `<video autoplay loop muted>` 动画背景。这需要改 DSH 源码 `packages/client/ui-layout/src/client/AppFrame.tsx`（`isVideo()` 判断 + `<video>` 分支 + `AppFrame.module.css` 的 `.backgroundVideo`），并 `pnpm --filter @deepseek-ai/dsh-client-ui-layout bundle`；插件侧只需 `routes.ts` 的 `contentTypeFor` 加视频类型 + `listThemeBackgrounds` 过滤出媒体文件。图片/视频都在同一个 `img/` 里轮播。
 

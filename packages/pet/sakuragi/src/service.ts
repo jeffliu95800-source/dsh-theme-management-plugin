@@ -5,7 +5,7 @@
  * reactions, ranks) and the pose list come from the character pack (data), so
  * swapping characters never touches code. The browser half talks to it through
  * the same-origin `/api/sakuragi/*` JSON endpoints built by routes.ts.
- * @module @deepseek-ai/dsh-sakuragi/service
+ * @module @jeffliu95800/dsh-sakuragi/service
  */
 
 import { Context, Service } from '@deepseek-ai/cordis'
