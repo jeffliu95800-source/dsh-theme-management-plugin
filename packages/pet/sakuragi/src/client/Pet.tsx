@@ -128,7 +128,7 @@ export function Pet({ useStore, t, pet, pass, hide, summon, send, clear, feedbac
 
   // Background music: play the first enabled track; restart on track change.
   // Autoplay may be blocked until the user interacts with the page.
-  const musicSrc = snapshot !== null && snapshot.music.enabled && snapshot.music.files.length > 0
+  const musicSrc = snapshot !== null && snapshot.music?.enabled === true && (snapshot.music.files?.length ?? 0) > 0
     ? snapshot.music.files[0]
     : undefined
   useEffect(() => {
@@ -210,7 +210,7 @@ export function Pet({ useStore, t, pet, pass, hide, summon, send, clear, feedbac
           {activePose !== undefined && (
             <img
               className={css.figure}
-              src={`/sakuragi/poses/${activePose}`}
+              src={activePose}
               alt={name}
               draggable={false}
             />
