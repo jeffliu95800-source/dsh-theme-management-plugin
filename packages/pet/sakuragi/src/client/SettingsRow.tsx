@@ -21,6 +21,7 @@ export interface PetSettingsInjected {
   getPetConfig: (id: string) => Promise<PetConfigView>
   renamePet: (id: string, name: string) => Promise<void>
   updatePetQuotes: (id: string, quotes: { bubbles?: Record<string, string>; reactions?: Record<string, string> }) => Promise<void>
+  updatePetActions: (id: string, actions: { pet: string; pass: string }) => Promise<void>
   setPetMusicEnabled: (id: string, enabled: boolean) => Promise<void>
   deletePet: (id: string) => Promise<void>
   uploadPetAsset: (kind: 'pose' | 'music', id: string, name: string, data: Blob) => Promise<void>
@@ -51,6 +52,7 @@ export function PetSettingsRow({
   getPetConfig,
   renamePet,
   updatePetQuotes,
+  updatePetActions,
   setPetMusicEnabled,
   deletePet,
   uploadPetAsset,
@@ -136,6 +138,7 @@ export function PetSettingsRow({
           getConfig={getPetConfig}
           renamePet={renamePet}
           updateQuotes={updatePetQuotes}
+          updateActions={updatePetActions}
           setMusicEnabled={setPetMusicEnabled}
           deletePet={deletePet}
           uploadAsset={uploadPetAsset}

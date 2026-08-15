@@ -70,6 +70,7 @@ function defaultPack(id: string, name: string): Record<string, unknown> {
     nameEn: 'New Pet',
     bubbles: {},
     reactions: { pet: '……', petCooldown: '……', pass: '……', passCooldown: '……' },
+    actions: { pet: '摸头', pass: '传球' },
     ranks: [{ min: 0, name: '伙伴', emoji: '*' }],
     chat: [],
     fallback: ['……'],
@@ -201,6 +202,19 @@ export function setPetMusicEnabled(id: string, enabled: boolean): void {
   const raw = readPetJson(id)
   const music = raw.music as { enabled?: boolean } | undefined
   writePetJson(id, { ...raw, music: { ...(music ?? {}), enabled } })
+}
+
+/** Replace a pet's interaction button labels (empty values fall back to defaults). */
+export function updatePetActions(id: string, actions: { pet: string; pass: string }): void {
+  const raw = readPetJson(id)
+  const existing = raw.actions as { pet?: string; pass?: string } | undefined
+  writePetJson(id, {
+    ...raw,
+    actions: {
+      pet: actions.pet.trim() || existing?.pet?.trim() || '摸头',
+      pass: actions.pass.trim() || existing?.pass?.trim() || '传球',
+    },
+  })
 }
 
 /** Delete a pet directory; when it was active the selection falls back to the built-in. */

@@ -227,6 +227,13 @@ export function makePetRoutes(deps: { service: PetService }): WebRoute[] {
       if (typeof id !== 'string' || typeof quotes !== 'object' || quotes === null) return Promise.reject(new Error('invalid-args'))
       return service.updatePetQuotes(id, quotes as PetQuotesPatch)
     }),
+    postRoute(`${PET_API_PREFIX}/pets/actions`, (body) => {
+      const id = body.id
+      const actions = body.actions as { pet?: unknown; pass?: unknown } | undefined
+      if (typeof id !== 'string' || actions === undefined) return Promise.reject(new Error('invalid-args'))
+      if (typeof actions.pet !== 'string' || typeof actions.pass !== 'string') return Promise.reject(new Error('invalid-args'))
+      return service.updatePetActions(id, { pet: actions.pet, pass: actions.pass })
+    }),
     postRoute(`${PET_API_PREFIX}/pets/music-toggle`, (body) => {
       const id = body.id
       const enabled = body.enabled

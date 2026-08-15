@@ -8,7 +8,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import type { PetConfigView } from './pet-store.ts'
 import css from './EditModal.module.css'
 
-/** Editable text areas: phase → label, and reaction key → label. */
+/** Editable text areas: phase → label. */
 const BUBBLE_LABELS: ReadonlyArray<readonly [string, string]> = [
   ['idle', '待机'],
   ['waiting', '等待'],
@@ -17,19 +17,13 @@ const BUBBLE_LABELS: ReadonlyArray<readonly [string, string]> = [
   ['done', '完成'],
 ]
 
-const REACTION_LABELS: ReadonlyArray<readonly [string, string]> = [
-  ['pet', '摸头'],
-  ['petCooldown', '摸头（冷却）'],
-  ['pass', '传球'],
-  ['passCooldown', '传球（冷却）'],
-]
-
 /** Presentational props (callbacks bound to the host API by the apply world). */
 export interface PetEditModalProps {
   id: string
   getConfig: (id: string) => Promise<PetConfigView>
   renamePet: (id: string, name: string) => Promise<void>
   updateQuotes: (id: string, quotes: { bubbles?: Record<string, string>; reactions?: Record<string, string> }) => Promise<void>
+  updateActions: (id: string, actions: { pet: string; pass: string }) => Promise<void>
   setMusicEnabled: (id: string, enabled: boolean) => Promise<void>
   deletePet: (id: string) => Promise<void>
   uploadAsset: (kind: 'pose' | 'music', id: string, name: string, data: Blob) => Promise<void>
@@ -47,6 +41,7 @@ export function PetEditModal({
   getConfig,
   renamePet,
   updateQuotes,
+  updateActions,
   setMusicEnabled,
   deletePet,
   uploadAsset,
@@ -57,6 +52,7 @@ export function PetEditModal({
   const [name, setName] = useState('')
   const [bubbles, setBubbles] = useState<Record<string, string>>({})
   const [reactions, setReactions] = useState<Record<string, string>>({})
+  const [actions, setActions] = useState<{ pet: string; pass: string }>({ pet: '摸头', pass: '传球' })
   const [saving, setSaving] = useState(false)
   const poseRef = useRef<HTMLInputElement | null>(null)
   const musicRef = useRef<HTMLInputElement | null>(null)
@@ -67,6 +63,7 @@ export function PetEditModal({
       setName(next.name)
       setBubbles(next.bubbles)
       setReactions(next.reactions)
+      setActions(next.actions ?? { pet: '摸头', pass: '传球' })
     }, () => {})
   }, [getConfig, id])
 
@@ -76,10 +73,24 @@ export function PetEditModal({
     const trimmed = name.trim()
     if (trimmed === '') return
     setSaving(true)
-    Promise.all([renamePet(id, trimmed), updateQuotes(id, { bubbles, reactions })])
+    Promise.all([
+      renamePet(id, trimmed),
+      updateQuotes(id, { bubbles, reactions }),
+      updateActions(id, actions),
+    ])
       .then(reload)
       .finally(() => { setSaving(false) })
-  }, [id, name, bubbles, reactions, renamePet, updateQuotes, reload])
+  }, [id, name, bubbles, reactions, actions, renamePet, updateQuotes, updateActions, reload])
+
+  // Reaction rows follow the (possibly custom) interaction button labels.
+  const petLabel = actions.pet?.trim() ? actions.pet : '摸头'
+  const passLabel = actions.pass?.trim() ? actions.pass : '传球'
+  const reactionRows: ReadonlyArray<readonly [string, string]> = [
+    ['pet', petLabel],
+    ['petCooldown', `${petLabel}（冷却）`],
+    ['pass', passLabel],
+    ['passCooldown', `${passLabel}（冷却）`],
+  ]
 
   const onPoseChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     const file = e.target.files?.[0]
@@ -146,6 +157,31 @@ export function PetEditModal({
               <input ref={poseRef} type="file" accept="image/*,.svg" style={{ display: 'none' }} onChange={onPoseChange} />
             </section>
 
+            {/* 互动按钮名称（自定义；聊/隐藏固定） */}
+            <section className={css.field}>
+              <h4 className={css.label}>互动按钮名称（聊、隐藏固定）</h4>
+              <label className={css.line}>
+                <span className={css.lineLabel}>按钮一</span>
+                <input
+                  className={css.input}
+                  value={actions.pet}
+                  maxLength={8}
+                  onChange={e => { setActions(prev => ({ ...prev, pet: e.target.value })) }}
+                  aria-label="按钮一名称"
+                />
+              </label>
+              <label className={css.line}>
+                <span className={css.lineLabel}>按钮二</span>
+                <input
+                  className={css.input}
+                  value={actions.pass}
+                  maxLength={8}
+                  onChange={e => { setActions(prev => ({ ...prev, pass: e.target.value })) }}
+                  aria-label="按钮二名称"
+                />
+              </label>
+            </section>
+
             {/* 非互动状态语录（只能替换） */}
             <section className={css.field}>
               <h4 className={css.label}>人物语录（非互动状态）</h4>
@@ -164,7 +200,7 @@ export function PetEditModal({
             {/* 点按钮互动状态语录（只能替换） */}
             <section className={css.field}>
               <h4 className={css.label}>点按钮互动状态语录</h4>
-              {REACTION_LABELS.map(([key, label]) => (
+              {reactionRows.map(([key, label]) => (
                 <label key={key} className={css.line}>
                   <span className={css.lineLabel}>{label}</span>
                   <input

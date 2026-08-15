@@ -30,6 +30,7 @@ import {
   setActivePetId,
   setMaterialRoot,
   setPetMusicEnabled as setPetMusicEnabledDir,
+  updatePetActions as updatePetActionsDir,
   updatePetQuotes as updatePetQuotesDir,
   BUILTIN_PET_ID,
   type PetSummary,
@@ -120,6 +121,8 @@ export interface PetStateView {
   poses: string[]
   /** Background music served under /sakuragi/pets/<id>/music/. */
   music: { enabled: boolean; files: string[] }
+  /** Interaction button labels. */
+  actions: { pet: string; pass: string }
 }
 
 /** One pet's editable config returned to the edit modal. */
@@ -130,6 +133,8 @@ export interface PetConfigView {
   bubbles: Record<string, string>
   /** Interaction reactions (button-click quotes). */
   reactions: { pet: string; petCooldown: string; pass: string; passCooldown: string }
+  /** Interaction button labels (customizable). */
+  actions: { pet: string; pass: string }
   fallback: string[]
   /** Pose image URL paths. */
   poses: string[]
@@ -339,6 +344,7 @@ export class PetService extends Service {
       name: pack.name,
       bubbles: pack.bubbles,
       reactions: pack.reactions,
+      actions: pack.actions,
       fallback: pack.fallback,
       poses: listPoseFiles(id).map(file => `/sakuragi/pets/${id}/${poseDirName()}/${file}`),
       music: {
@@ -366,6 +372,13 @@ export class PetService extends Service {
   /** Replace one pet's phase bubbles and/or interaction reactions. */
   async updatePetQuotes(id: string, quotes: PetQuotesPatch): Promise<{ ok: true }> {
     updatePetQuotesDir(id, quotes)
+    if (this.activeId === id) this.reloadCharacter()
+    return { ok: true }
+  }
+
+  /** Replace one pet's interaction button labels. */
+  async updatePetActions(id: string, actions: { pet: string; pass: string }): Promise<{ ok: true }> {
+    updatePetActionsDir(id, actions)
     if (this.activeId === id) this.reloadCharacter()
     return { ok: true }
   }
@@ -491,6 +504,7 @@ export class PetService extends Service {
       name: this.persist.name,
       poses: this.poses(),
       music: { enabled: this.character.music.enabled, files: this.musicFiles() },
+      actions: this.character.actions,
     }
   }
 

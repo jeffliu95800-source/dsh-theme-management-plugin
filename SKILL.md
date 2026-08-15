@@ -64,6 +64,7 @@ DSH Web GUI 的**主题 + 桌面宠物管理插件**。把「壁纸主题」和�
 | `POST /api/sakuragi/pets/config` / `themes/config` | 编辑弹窗配置（`{ id }`） |
 | `POST /api/sakuragi/pets/rename` / `themes/rename` | 改名（`{ id, name }`） |
 | `POST /api/sakuragi/pets/quotes` | 替换语录（`{ id, quotes: { bubbles?, reactions? } }`） |
+| `POST /api/sakuragi/pets/actions` | 自定义两个互动按钮名（`{ id, actions: { pet, pass } }`；聊/隐藏固定） |
 | `POST /api/sakuragi/pets/music-toggle` | 背景音乐开关（`{ id, enabled }`） |
 | `POST /api/sakuragi/pets/delete` / `themes/delete` | 删除（`{ id }`；删激活项自动回退内置） |
 | `POST /api/sakuragi/music/delete` | 删除宠物的一首音乐（`{ id, name }`） |

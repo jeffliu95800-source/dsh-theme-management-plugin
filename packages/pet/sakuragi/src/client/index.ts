@@ -159,6 +159,8 @@ export function apply(ctx: ClientContext): void {
       .then(() => { refreshLists(); refreshCharacterChat(); pollNow() }),
     updatePetQuotes: (id: string, quotes: { bubbles?: Record<string, string>; reactions?: Record<string, string> }) =>
       petFetch('/api/sakuragi/pets/quotes', { id, quotes }).then(() => { refreshCharacterChat(); pollNow() }),
+    updatePetActions: (id: string, actions: { pet: string; pass: string }) =>
+      petFetch('/api/sakuragi/pets/actions', { id, actions }).then(() => { pollNow() }),
     setPetMusicEnabled: (id: string, enabled: boolean) =>
       petFetch('/api/sakuragi/pets/music-toggle', { id, enabled }).then(() => { pollNow() }),
     deletePet: (id: string) => petFetch('/api/sakuragi/pets/delete', { id })

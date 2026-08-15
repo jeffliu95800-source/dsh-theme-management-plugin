@@ -29,6 +29,8 @@ export interface PetStateView {
   poses: string[]
   /** Background music served under /sakuragi/pets/<id>/music/. */
   music: { enabled: boolean; files: string[] }
+  /** Interaction button labels. */
+  actions: { pet: string; pass: string }
 }
 
 /** One pet's editable config returned by the edit endpoint. */
@@ -39,6 +41,8 @@ export interface PetConfigView {
   bubbles: Record<string, string>
   /** Interaction reactions (button-click quotes). */
   reactions: { pet: string; petCooldown: string; pass: string; passCooldown: string }
+  /** Interaction button labels (customizable). */
+  actions: { pet: string; pass: string }
   fallback: string[]
   /** Pose image URL paths. */
   poses: string[]

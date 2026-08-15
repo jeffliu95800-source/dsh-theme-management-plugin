@@ -48,5 +48,6 @@
     "我的座右铭是——篮板下，我就是王！"
   ],
   "namePattern": "(?:我是|我叫|我的名字是|我叫作)\\s*([\\u4e00-\\u9fa5A-Za-z]{2,12})",
-  "music": { "enabled": false }
+  "music": { "enabled": false },
+  "actions": { "pet": "摸头", "pass": "传球" }
 }

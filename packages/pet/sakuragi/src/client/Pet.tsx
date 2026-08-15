@@ -181,9 +181,11 @@ export function Pet({ useStore, t, pet, pass, hide, summon, send, clear, feedbac
     )
   }
 
-  const { display, bubble, name, poses } = snapshot
+  const { display, bubble, name, poses, actions } = snapshot
   const line = feedback?.text ?? bubble
   const activePose = poses.length > 0 ? poses[poseIndex % poses.length] : undefined
+  const petLabel = actions?.pet?.trim() ? actions.pet : '摸头'
+  const passLabel = actions?.pass?.trim() ? actions.pass : '传球'
 
   return (
     <div
@@ -218,8 +220,8 @@ export function Pet({ useStore, t, pet, pass, hide, summon, send, clear, feedbac
         </div>
       </div>
       <div className={css.actions}>
-        <button type="button" className={css.action} onClick={pet}>摸头</button>
-        <button type="button" className={css.action} onClick={pass}>传球</button>
+        <button type="button" className={css.action} onClick={pet}>{petLabel}</button>
+        <button type="button" className={css.action} onClick={pass}>{passLabel}</button>
         <button type="button" className={css.action} onClick={() => { setChatOpen(o => !o) }}>聊</button>
         <button type="button" className={css.action} onClick={hide}>隐藏</button>
       </div>

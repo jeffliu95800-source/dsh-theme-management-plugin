@@ -27,6 +27,15 @@ export interface CharacterMusic {
   enabled: boolean
 }
 
+/** Labels of the two customizable interaction buttons. */
+export interface CharacterActions {
+  pet: string
+  pass: string
+}
+
+/** Default interaction button labels. */
+export const DEFAULT_ACTIONS: CharacterActions = { pet: '摸头', pass: '传球' }
+
 /** Fully-typed character pack (character.json + auto-discovered poses). */
 export interface CharacterPack {
   id: string
@@ -36,6 +45,8 @@ export interface CharacterPack {
   bubbles: Record<string, string>
   /** Interaction reactions (pet / pass + their cooldown variants). */
   reactions: { pet: string; petCooldown: string; pass: string; passCooldown: string }
+  /** Interaction button labels (customizable; defaults when absent). */
+  actions: CharacterActions
   ranks: CharacterRank[]
   chat: ChatRule[]
   fallback: string[]
@@ -53,7 +64,8 @@ const POSE_EXTENSIONS = ['.svg', '.png', '.jpg', '.jpeg', '.webp', '.gif']
 /** Load the character pack from a directory holding character.json + poses/. */
 export function loadCharacterPack(dir: string, poseDir: string = 'poses'): CharacterPack {
   const parsed = JSON.parse(readFileSync(join(dir, 'character.json'), 'utf8')) as
-    Omit<CharacterPack, 'poses' | 'music'> & { music?: Partial<CharacterMusic> | undefined }
+    Omit<CharacterPack, 'poses' | 'music' | 'actions'>
+    & { music?: Partial<CharacterMusic> | undefined; actions?: Partial<CharacterActions> | undefined }
   let poses: string[] = []
   try {
     poses = readdirSync(join(dir, poseDir))
@@ -62,5 +74,10 @@ export function loadCharacterPack(dir: string, poseDir: string = 'poses'): Chara
   } catch {
     // pose dir absent → empty pose list
   }
-  return { ...parsed, music: { enabled: parsed.music?.enabled ?? false }, poses }
+  return {
+    ...parsed,
+    music: { enabled: parsed.music?.enabled ?? false },
+    actions: { pet: parsed.actions?.pet ?? DEFAULT_ACTIONS.pet, pass: parsed.actions?.pass ?? DEFAULT_ACTIONS.pass },
+    poses,
+  }
 }
