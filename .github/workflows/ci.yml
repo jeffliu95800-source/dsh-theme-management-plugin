@@ -1,0 +1,23 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check SKILL.md frontmatter
+        run: |
+          grep -q '^name: dsh-slamdunk-skin$' SKILL.md
+          grep -q '^description:' SKILL.md
+
+      - name: Smoke-test the SVG transparent-background script
+        run: |
+          node scripts/svg-transparent.mjs assets/pose_waving.svg /tmp/pose_waving.out.svg
+          test -s /tmp/pose_waving.out.svg
+          grep -q '<svg' /tmp/pose_waving.out.svg

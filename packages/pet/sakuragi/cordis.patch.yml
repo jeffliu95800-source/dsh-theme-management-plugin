@@ -1,0 +1,6 @@
+# dsh-sakuragi bundle patch: one row mounts BOTH halves — the host side
+# (pet service + routes) and, via the package's dsh.client manifest, the
+# browser side (modules node half scans dsh.client packages into the roster).
+- insert:
+    - id: sakuragi-pet
+      name: '@deepseek-ai/dsh-sakuragi'

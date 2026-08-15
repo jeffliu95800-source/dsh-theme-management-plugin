@@ -1,0 +1,27 @@
+name: release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Package skill
+        run: |
+          zip -r dsh-slamdunk-skin.zip \
+            SKILL.md README.md LICENSE .gitignore \
+            packages assets scripts
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dsh-slamdunk-skin.zip
+          generate_release_notes: true

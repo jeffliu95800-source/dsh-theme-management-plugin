@@ -1,0 +1,103 @@
+/* General-settings skin manager: two sections (桌面宠物 / 桌面主题), each with
+ * a head row, a new-item button, and an item list with an activate action. */
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--dsw-alias-border-l2);
+}
+
+.sectionHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.sectionTitle {
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 22px;
+  color: var(--dsw-alias-label-primary);
+}
+
+.newBtn {
+  align-self: flex-start;
+  padding: 4px 12px;
+  border-radius: 10px;
+  border: 1px dashed var(--dsw-alias-border-l2);
+  background: transparent;
+  color: var(--dsw-alias-label-secondary);
+  font-size: 13px;
+  line-height: 20px;
+  cursor: pointer;
+}
+
+.newBtn:hover {
+  color: var(--dsw-alias-label-primary);
+  border-color: var(--dsw-alias-border-l3);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.rowName {
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--dsw-alias-label-primary);
+}
+
+.activeBtn {
+  flex: none;
+  padding: 2px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--dsw-alias-border-l2);
+  background: var(--dsw-alias-bg-layer-1);
+  color: var(--dsw-alias-label-primary);
+  font-size: 12px;
+  line-height: 20px;
+  cursor: pointer;
+}
+
+.activeBtn:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.switch,
+.switchOn {
+  flex: none;
+  position: relative;
+  width: 40px;
+  height: 24px;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  background: var(--dsw-alias-interactive-bg-hover);
+  transition: background var(--ds-transition-duration-slow) var(--ds-ease-in-out);
+}
+
+.switchOn {
+  background: var(--dsw-alias-brand-primary);
+}
+
+.knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--dsw-alias-bg-base);
+  transition: transform var(--ds-transition-duration-slow) var(--ds-ease-in-out);
+}
+
+.switchOn .knob {
+  transform: translateX(16px);
+}
