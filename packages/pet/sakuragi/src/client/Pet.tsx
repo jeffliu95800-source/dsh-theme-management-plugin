@@ -228,7 +228,7 @@ export function Pet({ useStore, t, pet, pass, hide, summon, send, clear, feedbac
     { label: '聊', run: (): void => { setChatOpen(true); setMenuOpen(false) } },
     { label: '隐藏', run: hide },
   ]
-  const fanRadius = display.size * 0.8
+  const fanRadius = display.size * 0.5
 
   return (
     <div

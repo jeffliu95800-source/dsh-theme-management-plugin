@@ -104,7 +104,7 @@ pnpm dsh plugin --profile web add link:<checkout>/packages/pet/sakuragi   # 本�
 
 ## 主题表面改动（透明 + 磨砂 + 视频壁纸，一次性）
 
-插件本体管"数据"（壁纸/人物），而"表面透明 + 80% 磨砂"是 `packages/client/*` 的 CSS/TSX 改动（见旧版 `dsh-slamdunk-skin` skill 第 1 节），改动后需打包对应 client 包。核心模式：`background: transparent` 露出壁纸；控件用 `color-mix(in srgb, var(--token) 80%, transparent)` 做磨砂。
+插件本体管"数据"（壁纸/人物），而"表面透明 + 80% 磨砂"是 `packages/client/*` 的 CSS/TSX 改动（见旧版 `dsh-slamdunk-skin` skill 第 1 节），改动后需打包对应 client 包。核心模式：`background: transparent` 露出壁纸；控件用 `color-mix(in srgb, var(--token) 93%, transparent)` 做磨砂。
 
 **视频壁纸**：把 `mp4/m4v/webm/ogv/mov` 直接放进主题的 `img/`（不能放子文件夹），AppFrame 会渲染成 `<video autoplay loop muted>` 动画背景。这需要改 DSH 源码 `packages/client/ui-layout/src/client/AppFrame.tsx`（`isVideo()` 判断 + `<video>` 分支 + `AppFrame.module.css` 的 `.backgroundVideo`），并 `pnpm --filter @deepseek-ai/dsh-client-ui-layout bundle`；插件侧只需 `routes.ts` 的 `contentTypeFor` 加视频类型 + `listThemeBackgrounds` 过滤出媒体文件。图片/视频都在同一个 `img/` 里轮播。
 
