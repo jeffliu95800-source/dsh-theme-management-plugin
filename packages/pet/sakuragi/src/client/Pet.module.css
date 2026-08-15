@@ -45,7 +45,7 @@
   max-width: 240px;
   padding: 6px 10px;
   border-radius: 12px;
-  background: color-mix(in srgb, var(--dsw-alias-bg-overlay) 93%, transparent);
+  background: var(--dsw-alias-bg-overlay);
   border: 1px solid var(--dsw-alias-border-l2);
   color: var(--dsw-alias-label-primary);
   font-size: 12px;
@@ -72,7 +72,7 @@
   padding: 3px 10px;
   border-radius: 12px;
   border: 1px solid var(--dsw-alias-border-l2);
-  background: color-mix(in srgb, var(--dsw-alias-bg-layer-1) 93%, transparent);
+  background: var(--dsw-alias-bg-layer-1);
   color: var(--dsw-alias-label-primary);
   font-size: 12px;
   line-height: 20px;
