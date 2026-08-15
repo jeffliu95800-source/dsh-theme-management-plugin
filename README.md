@@ -30,7 +30,7 @@ dsh theme/
 ```yaml
 - id: sakuragi-pet
   config:
-    materialRoot: '/Users/jeff/Documents/dsh theme'
+    materialRoot: '/Users/jeff/Documents/dsh/dsh theme'
 ```
 
 首次扫描时插件会为每个子文件夹自动生成 `character.json`（名称=文件夹名）与 `theme.json`；之后在设置里编辑/上传/删除都会直接写回这个文件夹。`model` 为空时宠物暂不显示形象，放入图片后刷新即出现（`img` 同理作用于壁纸，AppFrame 30 秒内轮询到）。
