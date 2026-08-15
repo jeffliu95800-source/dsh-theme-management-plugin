@@ -140,7 +140,17 @@ export function Pet({ useStore, t, pet, pass, hide, summon, send, clear, feedbac
     const el = audioRef.current
     if (el === null || musicSrc === undefined) return
     const attempt = el.play()
-    attempt?.catch(() => { /* blocked until a user gesture; retried on next change */ })
+    // Autoplay is blocked until the first user gesture: arm one-shot listeners
+    // that retry the play on the next pointer/key interaction.
+    attempt?.catch(() => {
+      const retry = (): void => {
+        window.removeEventListener('pointerdown', retry)
+        window.removeEventListener('keydown', retry)
+        el.play().catch(() => {})
+      }
+      window.addEventListener('pointerdown', retry)
+      window.addEventListener('keydown', retry)
+    })
   }, [musicSrc])
 
   const onPointerDown = (e: React.PointerEvent<HTMLDivElement>): void => {
