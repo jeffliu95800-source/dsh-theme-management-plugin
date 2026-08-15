@@ -125,15 +125,38 @@ export function themeBackgroundsDir(id: string): string {
 /** Image + video extensions accepted as wallpapers. */
 const BACKGROUND_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.svg', '.mp4', '.m4v', '.webm', '.ogv', '.mov']
 
-/** Background media filenames for one theme (images + videos; sorted). */
+/** Names of background files soft-deleted (hidden but kept on disk). */
+function softDeletedBackgrounds(id: string): Set<string> {
+  try {
+    const raw = JSON.parse(readFileSync(join(themeDir(id), 'theme.json'), 'utf8')) as { deletedBackgrounds?: unknown }
+    const list = Array.isArray(raw.deletedBackgrounds) ? raw.deletedBackgrounds.filter((n): n is string => typeof n === 'string') : []
+    return new Set(list)
+  } catch {
+    return new Set()
+  }
+}
+
+/** Background media filenames for one theme (images + videos; soft-deleted hidden). */
 export function listThemeBackgrounds(id: string): string[] {
+  const deleted = softDeletedBackgrounds(id)
   try {
     return readdirSync(themeBackgroundsDir(id))
       .filter(file => BACKGROUND_EXTENSIONS.some(ext => file.toLowerCase().endsWith(ext)))
+      .filter(file => !deleted.has(file))
       .sort()
   } catch {
     return []
   }
+}
+
+/** Soft-delete a background: keep the file, just hide it from listings. */
+export function softDeleteBackground(id: string, name: string): boolean {
+  const dir = themeDir(id)
+  const raw = JSON.parse(readFileSync(join(dir, 'theme.json'), 'utf8')) as Record<string, unknown>
+  const current = (raw.deletedBackgrounds as string[] | undefined) ?? []
+  if (current.includes(name)) return false
+  writeFileSync(join(dir, 'theme.json'), JSON.stringify({ ...raw, deletedBackgrounds: [...current, name] }, null, 2))
+  return true
 }
 
 /** Create a new theme from a name; returns its id. */

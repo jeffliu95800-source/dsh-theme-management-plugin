@@ -30,6 +30,7 @@ import {
   setActivePetId,
   setMaterialRoot,
   setPetMusicEnabled as setPetMusicEnabledDir,
+  softDeletePose,
   updatePetActions as updatePetActionsDir,
   updatePetQuotes as updatePetQuotesDir,
   BUILTIN_PET_ID,
@@ -47,6 +48,7 @@ import {
   renameTheme as renameThemeDir,
   seedBuiltinTheme,
   setActiveThemeId,
+  softDeleteBackground,
   themeBackgroundsDir,
   themeName,
   type ThemeSummary,
@@ -402,9 +404,9 @@ export class PetService extends Service {
     return { ok }
   }
 
-  /** Delete one pose image of a pet. */
+  /** Soft-delete one pose image of a pet (file stays on disk, hidden from listings). */
   async deletePetPose(id: string, name: string): Promise<{ ok: boolean }> {
-    const ok = deleteFile(petPosesDirOf(id), name)
+    const ok = softDeletePose(id, name)
     if (this.activeId === id) this.reloadCharacter()
     return { ok }
   }
@@ -450,9 +452,9 @@ export class PetService extends Service {
     return { ok: true }
   }
 
-  /** Delete one background image of a theme. */
+  /** Soft-delete one background image of a theme (file stays, hidden from listings). */
   async deleteThemeBackground(id: string, name: string): Promise<{ ok: boolean }> {
-    return { ok: deleteFile(themeBackgroundsDir(id), name) }
+    return { ok: softDeleteBackground(id, name) }
   }
 
   display(): PetDisplayConfig {

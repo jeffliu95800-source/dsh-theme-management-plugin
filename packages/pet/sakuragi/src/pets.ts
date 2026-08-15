@@ -150,15 +150,37 @@ export function petMusicDir(id: string): string {
 /** Image extensions accepted as character poses. */
 const POSE_EXTENSIONS = ['.svg', '.png', '.jpg', '.jpeg', '.webp', '.gif']
 
-/** Pose image filenames for one pet (sorted; empty when absent). */
+/** Names of pose files soft-deleted (hidden but kept on disk). */
+function softDeletedPoses(id: string): Set<string> {
+  try {
+    const raw = JSON.parse(readFileSync(join(petDir(id), 'character.json'), 'utf8')) as { deletedPoses?: unknown }
+    const list = Array.isArray(raw.deletedPoses) ? raw.deletedPoses.filter((n): n is string => typeof n === 'string') : []
+    return new Set(list)
+  } catch {
+    return new Set()
+  }
+}
+
+/** Pose image filenames for one pet (sorted; soft-deleted ones hidden). */
 export function listPoseFiles(id: string): string[] {
+  const deleted = softDeletedPoses(id)
   try {
     return readdirSync(petPosesDir(id))
       .filter(file => POSE_EXTENSIONS.some(ext => file.toLowerCase().endsWith(ext)))
+      .filter(file => !deleted.has(file))
       .sort()
   } catch {
     return []
   }
+}
+
+/** Soft-delete a pose: keep the file, just hide it from listings. */
+export function softDeletePose(id: string, name: string): boolean {
+  const raw = readPetJson(id)
+  const current = (raw.deletedPoses as string[] | undefined) ?? []
+  if (current.includes(name)) return false
+  writePetJson(id, { ...raw, deletedPoses: [...current, name] })
+  return true
 }
 
 /** Background-music filenames for one pet (sorted; empty when absent). */
