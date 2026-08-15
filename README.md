@@ -4,6 +4,12 @@ DeepSeek Harness Web GUI 的**主题与桌面宠物管理插件**：把「壁纸
 
 内置默认示例：《灌篮高手》主题 + 樱木花道宠物（可随时新建自己的主题和宠物替换）。
 
+## 预览
+<img width="3004" height="1642" alt="小新主题" src="https://github.com/user-attachments/assets/3e3082e8-90cc-4206-9eba-5d0160ee6404" />
+<img width="3024" height="1642" alt="蜡笔小新主题" src="https://github.com/user-attachments/assets/5c6f220c-1476-4e3d-b1f4-932f6db17578" />
+<img width="3024" height="1646" alt="凡人修仙传主题" src="https://github.com/user-attachments/assets/4528d825-d96b-43e9-b0ba-7895d69f2239" />
+<img width="3024" height="1648" alt="灌篮高手主题" src="https://github.com/user-attachments/assets/f28c23b4-aa7b-4bec-8be3-09d601be101f" />
+
 ## 功能
 
 | 功能 | 说明 |
