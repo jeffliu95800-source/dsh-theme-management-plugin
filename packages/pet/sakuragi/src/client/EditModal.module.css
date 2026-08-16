@@ -273,8 +273,8 @@
   padding: 6px 16px;
   border-radius: 10px;
   border: none;
-  background: var(--dsw-alias-brand-primary-invert);
-  color: var(--dsw-alias-brand-primary);
+  background: var(--dsw-alias-brand-primary);
+  color: var(--dsw-alias-brand-primary-invert);
   font-size: 13px;
   line-height: 20px;
   cursor: pointer;

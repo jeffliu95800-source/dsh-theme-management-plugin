@@ -70,7 +70,7 @@
   padding: 6px 10px;
   border-radius: 12px 12px 2px 12px;
   background: var(--dsw-alias-brand-primary);
-  color: color-mix(in srgb, var(--dsw-alias-brand-primary-invert) 80%, transparent);
+  color: var(--dsw-alias-brand-primary-invert);
   font-size: 13px;
   line-height: 20px;
 }
@@ -80,7 +80,7 @@
   padding: 6px 10px;
   border-radius: 12px 12px 12px 2px;
   background: var(--dsw-alias-bg-module-platform);
-  color: color-mix(in srgb, var(--dsw-alias-label-primary) 80%, transparent);
+  color: var(--dsw-alias-label-primary);
   font-size: 13px;
   line-height: 20px;
 }
@@ -108,8 +108,8 @@
   padding: 6px 12px;
   border-radius: 10px;
   border: none;
-  background: var(--dsw-alias-brand-primary-invert);
-  color: var(--dsw-alias-brand-primary);
+  background: var(--dsw-alias-brand-primary);
+  color: var(--dsw-alias-brand-primary-invert);
   font-size: 13px;
   cursor: pointer;
 }
