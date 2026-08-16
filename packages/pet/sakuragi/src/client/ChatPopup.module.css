@@ -69,7 +69,7 @@
   max-width: 80%;
   padding: 6px 10px;
   border-radius: 12px 12px 2px 12px;
-  background: var(--dsw-alias-brand-primary);
+  background: color-mix(in srgb, var(--dsw-alias-brand-primary) 60%, transparent);
   color: var(--dsw-alias-brand-primary-invert);
   font-size: 13px;
   line-height: 20px;
@@ -79,7 +79,7 @@
   max-width: 80%;
   padding: 6px 10px;
   border-radius: 12px 12px 12px 2px;
-  background: var(--dsw-alias-bg-module-platform);
+  background: color-mix(in srgb, var(--dsw-alias-bg-module-platform) 60%, transparent);
   color: var(--dsw-alias-label-primary);
   font-size: 13px;
   line-height: 20px;
@@ -108,8 +108,8 @@
   padding: 6px 12px;
   border-radius: 10px;
   border: none;
-  background: var(--dsw-alias-brand-primary);
-  color: var(--dsw-alias-brand-primary-invert);
+  background: var(--dsw-static-deepseek-450);
+  color: var(--dsw-static-neutral-bluish-00);
   font-size: 13px;
   cursor: pointer;
 }
