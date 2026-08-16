@@ -81,7 +81,7 @@ dsh plugin --profile web add link:<checkout>/packages/pet/sakuragi
 # with model/ (poses), img/ (wallpapers), music/ (background music).
 - id: sakuragi-pet
   config:
-    materialRoot: '/Users/jeff/Documents/dsh/dsh theme'
+    materialRoot: '/path/to/dsh-theme'
 ```
 
 > ⚠️ **这份配置曾被意外清空**（导致插件回退到 legacy 布局、素材库人物「消失」）。建议把上面完整内容单独存一份备份，避免丢失后误以为数据丢了。
