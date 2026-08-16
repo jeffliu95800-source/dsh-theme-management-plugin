@@ -177,3 +177,19 @@ curl -I http://127.0.0.1:3091/sakuragi/pets/sakuragi/poses/pose_waving.svg  # 20
 | 视频壁纸不播 | 确认文件直接放 `img/`（不放子文件夹），且扩展名是 mp4/webm/mov |
 | 启动崩溃 / 找不到包 | 开发期别用 scope 包名安装；未 `npm publish` 前用 `link:` 或 `file:` |
 | `file:` 装完就崩 | `file:` 必须指向绝对路径的 `.tgz`（或含 `lib/` 的目录），别指 `src/` 源码 |
+
+---
+
+## 九、开发调试：改什么 → 做什么
+
+用 `link:` 依赖（指向 checkout 源码）时，改动后的生效方式：
+
+| 改了什么 | 操作 |
+|---|---|
+| **browser 半区**（`src/client/` 的 TSX/CSS：宠物 UI、按钮、气泡、聊天等） | `pnpm --filter @jeffliu95800/dsh-sakuragi bundle` → 硬刷新 `Cmd+Shift+R` |
+| **host 半区**（`routes.ts` / `service.ts` / `pets.ts` / `themes.ts` 等：路由、状态机、目录管理） | `pnpm --filter @jeffliu95800/dsh-sakuragi bundle` → **重启 `dsh web`** |
+| **内置 client 包**（`ui-layout` / `ui-theme` / `ui-sidebar` / `ui-conversation` 等） | `pnpm --filter @deepseek-ai/dsh-client-<name> bundle` → 硬刷新 |
+
+> 判断依据：dsh 的 registry 每次请求都实时读 `lib/client.js`（`cache-control: no-cache`，不缓存），所以 **browser 半区改动刷新即可**；而 **host 路由/服务是启动时注册的，必须重启**。
+
+> ⚠️ 用 `file:` 依赖（tgz）时，改完还要额外 `pack` + 重新安装到 profile，且 pnpm 有「同路径 tgz 内容变了不重装」的缓存坑。**开发调试强烈建议用 `link:` 依赖**，省掉 pack / 重装。
